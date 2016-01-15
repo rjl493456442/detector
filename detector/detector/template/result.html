@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Pratt - Free Bootstrap 3 Theme">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="assets/ico/favicon.png">
+
+    <title>Analysis Result</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/assets/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/assets/css/button.css" rel="stylesheet">
+    <link href="/static/assets/css/dropzone.css" rel="stylesheet">
+
+    
+    <!-- MetisMenu CSS -->
+    <link href="/static/assets/css/metisMenu.min.css" rel="stylesheet">
+
+    <!-- DataTables CSS -->
+    <!-- DataTables Responsive CSS -->
+
+    <!-- Custom styles for this template -->
+    <link href="/static/assets/css/main.css" rel="stylesheet">
+
+
+    <link href="/static/assets/css/dataTables.bootstrap.css" rel="stylesheet">
+
+    <!-- DataTables Responsive CSS -->
+    <link href="/static/assets/css/dataTables.responsive.css" rel="stylesheet">
+    <script src="/static/assets/js/jquery.min.js"></script>
+    <script src="/static/assets/js/smoothscroll.js"></script>
+    <script src="/static/assets/js/chart.js"></script>
+
+
+  </head>
+
+  <body data-spy="scroll" data-offset="0" data-target="#navigation">
+
+    <!-- Fixed navbar -->
+	    <div id="navigation" class="navbar navbar-default navbar-fixed-top">
+	      <div class="container">
+	        <div class="navbar-header">
+	          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	          </button>
+	          <a class="navbar-brand" href="/"><b>Detector</b></a>
+	        </div>
+	        <div class="navbar-collapse collapse">
+	          <ul class="nav navbar-nav">
+	            <li class="active"><a href="#input" class="smothscroll">statistical information</a></li>
+              <li><a href="#service" class="smothscroll">service</a></li>
+	            <li><a href="#method" class="smothscroll">method</a></li>
+	          </ul>
+	        </div><!--/.nav-collapse -->
+	      </div>
+	    </div>
+
+  <section id="input" name="statistical"></section>
+  <div id="intro">
+    <div class = "container">
+    <div id="page-wrapper">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="page-header" style= "text-align:center">Statistical Information</h1>
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->            
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <!-- /.panel-heading -->
+                        <div class="panel-body">
+                            <div class="dataTable_wrapper">
+                                <table class="table table-striped table-bordered table-hover" id="dataTables-statistic">     
+                                    <thead>
+                                        <tr>
+                                            <th>File Name</th>
+                                            <th>File Size(MB)</th>
+                                            <th>Status</th>
+                                            <th>Reason</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                      {%for itm in process_file%}
+                                      <tr>
+                                          <th>{{itm.name}}</th>
+                                          <th>{{itm.size}}</th>
+                                          <th>{{itm.status}}</th>
+                                          <th>{{itm.reason}}</th>
+                                      </tr> 
+                                      {%endfor%}
+                                    </tbody>
+                                </table>
+
+                                <div>
+                                  <div class="col-lg-6">
+                                    <h2>Total process file size :</h2>
+                                  </div> 
+                                  <div class="col-lg-6">
+                                    <h2>{{total_size}}MB</h2>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <div class="col-lg-6">
+                                    <h2>Total process time :</h2>
+                                  </div> 
+                                  <div class="col-lg-6">
+                                    <h2>{{elapsed}}s</h2>
+                                  </div>
+                                </div>
+                                
+                            </div>
+                            <!-- /.table-responsive -->
+                        </div>
+                        <!-- /.panel-body -->
+                    </div>
+                    <!-- /.panel -->
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->
+            
+            <!-- /.row -->
+        </div>
+      </div>
+        <!-- /#page-wrapper -->
+  </div><!--/ #introwrap -->   
+
+	<section id="service" name="service"></section>
+	<div id="intro">
+    <div class = "container">
+    <div id="page-wrapper">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="page-header" style= "text-align:center">Services Classification</h1>
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->            
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <!-- /.panel-heading -->
+                        <div class="panel-body">
+                            <div class="dataTable_wrapper">
+                                <table class="table table-striped table-bordered table-hover" id="dataTables-service">        
+                                    <thead>
+                                        <tr>
+                                            <th >Service ID</th>
+                                            <th>Max Time(ms)</th>
+                                            <th>Min Time(ms)</th>
+                                            <th>Avg Time(ms)</th> 
+                                            <th>Exe Count(ms)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                      {%for itm in services%}
+                                      <tr class = "clickable-row" data-href = "/services/{{itm.serviceId}}/">
+                                          <th>{{itm.serviceId}}</th>
+                                          <th>{{itm.max}}</th>
+                                          <th>{{itm.min}}</th>
+                                          <th>{{itm.avg}}</th>
+                                          <th>{{itm.cnt}}</th>
+                                      </tr> 
+                                      {%endfor%}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- /.table-responsive -->
+                        </div>
+                        <!-- /.panel-body -->
+                    </div>
+                    <!-- /.panel -->
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->
+            
+            <!-- /.row -->
+        </div>
+      </div>
+        <!-- /#page-wrapper -->
+  </div><!--/ #introwrap -->
+  <!-- Bar chart-->
+  <div class = "container">
+    <label style= "text-align:center">
+      <h2> Top 10 Services Avg Time
+    <div class = "container">
+    <canvas id="myBarChart" width="1150px" height="550"></canvas>
+    </div>
+    </label>
+  </div>
+
+
+	<section id="method" name="method"></section>
+	<!-- INTRO WRAP -->
+	<div id="intro">
+    <div class = "container">
+		<div id="page-wrapper">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="page-header" style= "text-align:center">Hot Functions</h1>
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->            
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default" style = "width:1200px">
+                        <!-- /.panel-heading -->
+                        <div class="panel-body">
+                            <div class="dataTable_wrapper">
+                                <table class="table table-striped table-hover table-stripe" id="dataTables-method">       
+                                    <thead>
+                                        <tr>
+                                            <th>Method Name</th>
+                                            <th>Max Time(ms)</th>
+                                            <th>Min Time(ms)</th>
+                                            <th>Avg Time(ms)</th> 
+                                            <th>Score</th>
+                                            <th>Count</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                      {%for itm in rank_lst%}
+                                      <tr>
+                                          <th>{{itm.0}}</th>
+                                          <th>{{itm.1.max}}</th>
+                                          <th>{{itm.1.min}}</th>
+                                          <th>{{itm.1.avg}}</th>
+                                          <th>{{itm.1.score}}</th>
+                                          <th>{{itm.1.cnt}}</th>
+                                      </tr> 
+                                      {%endfor%}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- /.table-responsive -->
+                        </div>
+                        <!-- /.panel-body -->
+                    </div>
+                    <!-- /.panel -->
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->
+            
+            <!-- /.row -->
+        </div>
+      </div>
+        <!-- /#page-wrapper -->
+	</div><!--/ #introwrap -->
+  <div class = "container" id = "export_pdf_result">
+      <span class="button-wrap" >
+          <a href="/save_csv/" class="button button-pill" id = "export_csv">Export CSV</a>
+      </span>
+  </div>
+  
+
+	<div id="c">
+		<div class="container">
+			<p>Created by <a href="http://github.com/rjl493456442">Jialei Rong</a></p>
+
+		</div>
+	</div>
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="/static/assets/js/bootstrap.js"></script>
+    <script src="/static/assets/js/jquery.dataTables.min.js"></script>
+    <script src="/static/assets/js/dataTables.bootstrap.min.js"></script>
+    	<script>
+    	$('.carousel').carousel({
+    	  interval: 3500
+    	})
+      $(document).ready(function() {
+            $('#dataTables-service').DataTable({
+                    responsive: true,
+                    searching : false
+            });
+        });
+      $(document).ready(function() {
+            $('#dataTables-method').DataTable({
+                    "responsive": false,
+                    "searching" : false,
+                    "bAutoWidth": false,
+
+            });
+        });
+      $(document).ready(function() {
+            $('#dataTables-statistic').DataTable({
+                    responsive: true,
+                    searching : false
+            });
+        });
+
+      $(document).ready(function() {
+        $(".clickable-row").click(function() {
+            window.document.location = $(this).data("href");
+        });
+      });
+
+      var _labels = [];
+      var data_max = [];
+      var data_min = [];
+      var data_avg = [];
+
+      {%for itm in services%}
+      _labels.push("{{itm.serviceId}}");
+      data_max.push({{itm.max}});
+      data_min.push({{itm.min}});
+      data_avg.push({{itm.avg}});
+      {%endfor%}
+
+
+      data_avg = data_avg.slice(0,10);
+      _labels = _labels.slice(0,10);
+
+      var ctx = document.getElementById("myBarChart").getContext("2d");
+      var data = {
+        labels : _labels,
+        datasets : [
+          {
+            fillColor : "rgba(220,220,220,0.5)",
+            strokeColor : "rgba(220,220,220,1)",
+            data : data_avg
+          },
+          /*{
+            fillColor : "rgba(151,187,205,0.5)",
+            strokeColor : "rgba(151,187,205,1)",
+            data : data_min
+          },
+          {
+            fillColor : "rgba(99,87,245,0.5)",
+            strokeColor : "rgba(99,87,245,1)",
+            data : data_avg
+          }
+          */
+        ]
+      };
+      new Chart(ctx).Bar(data,{
+        scaleLabel: "<%=value%>",
+      });
+    	</script>
+
+	<script type="text/javascript" src = "/static/assets/js/dropzone.js"></script>
+  </body>
+</html>

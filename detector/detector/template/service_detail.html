@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Pratt - Free Bootstrap 3 Theme">
+    <meta name="author" content="Alvarez.is - BlackTie.co">
+    
+
+
+    <title>Detector</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/assets/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/assets/css/button.css" rel="stylesheet">
+    <link href="/static/assets/css/dropzone.css" rel="stylesheet">
+    <link href="/static/assets/css/zoom_circle.css" rel="stylesheet">
+    <!-- Custom styles for this template -->
+    <link href="/static/assets/css/main.css" rel="stylesheet">
+    <script src="/static/assets/js/jquery.min.js"></script>
+    <script src="/static/assets/js/smoothscroll.js"></script>
+    <script type="text/javascript" src = "/static/assets/js/circle.js"></script>
+    <script src="/static/assets/js/d3.min.js"></script>
+	<script src="/static/assets/js/tip.js"></script>
+
+
+  </head>
+
+  <body data-spy="scroll" data-offset="0" data-target="#navigation">
+
+    <!-- Fixed navbar -->
+	    <div id="navigation" class="navbar navbar-default navbar-fixed-top">
+	      <div class="container">
+	        <div class="navbar-header">
+	          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	          </button>
+	          <a class="navbar-brand" href="/"><b>Detector</b></a>
+	        </div>
+	        <div class="navbar-collapse collapse">
+	          <ul class="nav navbar-nav">
+	          	<li class="active"><a href="#hot_spot" class="smothscroll">Hot Spot</a></li>
+	            <li><a href="#zoom_circle" class="smothscroll">Zoom Pack</a></li>
+	          </ul>
+	        </div><!--/.nav-collapse -->
+	      </div>
+	    </div>
+	
+	<section id = 'hot_spot'></section>
+		<div class = "container">
+			<div class = "row">
+				<h1 class="centered" style = "padding-top:30px">Hot Spot</h1>
+				<div class="panel panel-default">
+                        
+                        <div class="panel-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Method Name</th>
+                                            <th>percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        				{%for itm in service.hot_spot%}
+                                        <tr class="info">
+                                            <td>{{itm.method_name}}</td>
+                                            <td>{{itm.percentage}}</td>
+                                        </tr>
+                                        {%endfor%}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+			</div>
+
+		</div>
+	<section id="zoom_circle" name = 'circle'></section>
+		<div class = "container">
+			<div class = "row">
+				<h1 class="centered" style = "padding-top:30px">Zoom Pack</h1>
+				<div id = 'circle'></div>
+			</div>
+		</div>
+	
+	
+	
+	<div id="c">
+		<div class="container">
+			<p>Created by <a href="http://github.com/rjl493456442">Jialei Rong</a></p>
+
+		</div>
+	</div>
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="/static/assets/js/bootstrap.js"></script>
+	<script>
+	$('.carousel').carousel({
+	  interval: 3500
+	})
+	</script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+		    $("#post").click(function(e) {
+		        e.preventDefault();
+		        var data = {
+		            'foo': 'bar'
+		        }
+
+		        $.ajax({
+		            "type": "POST",
+		            "dataType": "json",
+		            "url": "/upload/",
+		            "data": data,
+		            "success": function(result) {
+		                console.log(result);
+		            },
+		        });
+		    });
+		});
+		</script>
+	<script>
+		$(document).ready(function() {
+    		create_circle("{{path}}");
+		});
+	</script>
+	<script type="text/javascript" src = "/static/assets/js/dropzone.js"></script>
+	<script type="text/javascript" src = "/static/assets/js/main.js"></script>
+	
+  </body>
+</html>

@@ -24,14 +24,27 @@ function create_circle(path)
 
   d3.json(path, function(error, root) {
   if (error) throw error;
+    
     var tip = d3.tip()
     .attr('class', 'd3-tip')
-    .offset([-10, 0])
+    //.attr('style','z-index:1000, text-align:center')
+    .style("z-index",10)       
+    //.style("top", (d3.event.pageY - 28) + "px");
+    //.offset([-10, 0])
     .html(function(d) {
-      return "<strong>method:</strong><span style='color:red'>" + d.name + "</span>" + "  <strong>score:</strong>" + "<span>" + d.score + "</span>";
+      return "<strong>method:</strong><span style='color:blue'>" + d.name + "</span>" + "  <strong>score:</strong>" + "<span>" + d.score + "</span>";
     });
     svg.call(tip);
-    
+   
+    var tooltip = d3.select("body")
+      .append("div")
+      .style("position", "absolute")
+      .style("z-index", "10")
+      .style("visibility", "hidden")
+      .text(function(d){
+          return "<strong>method:</strong><span style='color:blue'>"  + "</span>" + "  <strong>score:</strong>" + "<span>"  + "</span>";
+      });
+
     var focus = root,
         nodes = pack.nodes(root),
         view;
@@ -42,8 +55,26 @@ function create_circle(path)
         .attr("class", function(d) { return d.parent ? d.children ? "node": "node--leaf" : "node--root"; })
         .style("fill", function(d) { return d.children ? color(d.depth) : null; })
         .on("click", function(d) { if (focus !== d) zoom(d), d3.event.stopPropagation(); })
+       /* .call(d3.tip()
+                //.attr({class: function(d, i) { return d + ' ' +  i + ' A'; }})
+                .style({color: 'blue'})
+                //.text(function(d){ return 'value: '+ d.name; })
+                .html(function(d) {
+                  return "<strong>method:</strong><span style='color:blue'>" + d.name + "</span>" + "  <strong>score:</strong>" + "<span>" + d.score + "</span>";
+                })
+            )
+        */
+        //.on('mouseover', function(d, i){ d3.select(this).style({fill: 'skyblue'}); })
+        //.on('mouseout', function(d, i){ d3.select(this).style({fill: 'aliceblue'}); });
+
+        //.append("title")
+        //.text(function(d) { return d.name; });
         .on("mouseover", tip.show)
         .on('mouseout', tip.hide);
+        //.on("mouseover", function(){return tooltip.style("visibility", "visible");})
+        //.on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
+        //.on("mouseout", function(){return tooltip.style("visibility", "hidden");});
+    
     var text = svg.selectAll("svg circle")
         .data(nodes)
       .enter().append("text")
@@ -76,7 +107,7 @@ function create_circle(path)
         .style("fill-opacity", function(d) { return d.parent === focus ? 1 : 0; })
         .each("start", function(d) { if (d.parent === focus) this.style.display = "inline"; })
         .each("end", function(d) { if (d.parent !== focus) this.style.display = "none"; });
-  }
+    }
 
     function zoomTo(v) {
       var k = diameter / v[2]; view = v;
@@ -85,6 +116,6 @@ function create_circle(path)
     }
   });
   d3.select(self.frameElement).style("height", diameter + "px");
-
 }
+
 

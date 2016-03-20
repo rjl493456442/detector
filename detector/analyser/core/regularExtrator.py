@@ -1,6 +1,7 @@
 import logging
 import re
 from config import CoreConfigure
+import datetime
 # logger configure
 logging.basicConfig(level = logging.DEBUG,
                     format = '%(asctime)s %(name)s %(levelname)s %(message)s',
@@ -51,7 +52,21 @@ class regularExtrator(object):
         except Exception, e:
             logger.error(e)
             return None
+    def filter_by_after_specific_datetime(log_datetime, datetime):
+        if log_datetime < datetime:
+            return False
+        else:
+            return True
+    def filter_by_in_datetime_range(log_datetime, datetime_begin, date_time_end):
+        if log_datetime > datetime_begin and log_datetime < datetime_end:
+            return True
+        else:
+            return False
 
+
+
+def unit_test():
+    pass
 
 if __name__ == "__main__":
     pass

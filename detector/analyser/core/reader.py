@@ -6,6 +6,7 @@ from django.conf import settings
 import os
 import logging
 import json
+import datetime
 logging.basicConfig(level = logging.DEBUG,
                     format = '%(asctime)s %(name)s %(levelname)s %(message)s',
                     datefmt='%a, %d %b %Y %H:%M:%S',
@@ -27,10 +28,15 @@ class Reader(object):
         self.extrator = regularExtrator()
         self.count = 0
         self.finished = False
-    def execute(self, test_data = None):
+        self.filter_datetime_begin = None
+        self.filter_datetime_end = None
+    def execute(self, datetime_begin = None, datetime_end = None, test_data = None):
         """
             method execute is a generator
         """
+        # initialize filter data
+        self.filter_datetime_begin = datetime_begin
+        self.filter_datetime_end = datetime_end
         # initiailize test data
         if test_data is None:
             # for debug mode
@@ -73,12 +79,21 @@ class Reader(object):
     def state_machine_change(self, current_state, reqinfo, *args, **kwargs):
         return {
             -1: self.parse_begin,
-            0: self.parsr_root,
+            0: self.parse_root,
             1: self.parse_call_method
         }.get(current_state)(reqinfo, *args, **kwargs)
     def parse_begin(self, reqinfo, *args, **kwargs):
         flag_str = "==Begin=="
         try:
+            # build datetime of request
+            request_datetime = reqinfo[1] + " " + reqinfo[2]
+            # convert to datetime object
+            datetime_object = datetime.datetime.strptime(request_datetime, "%Y-%m-%d %H:%M:%S")
+            # check validation of request datetime
+            if self.check_datetime_validation(datetime_object) is False:
+                return None
+            # set datetime of request
+            self.req_info['datetime'] = datetime_object
             # get method name
             line = reqinfo[11]
             if line.find(flag_str) != -1:
@@ -87,7 +102,7 @@ class Reader(object):
             logger.error(e)
         finally:
             return None
-    def parsr_root(self, reqinfo, *args, **kwargs):
+    def parse_root(self, reqinfo, *args, **kwargs):
         try:
             #get total time
             total_time = int(reqinfo[13])
@@ -159,6 +174,14 @@ class Reader(object):
                 return False
         else:
             return False
+    def check_datetime_validation(self, datetime):
+        validation = True
+        if self.filter_datetime_begin is not None and datetime < self.filter_datetime_begin:
+            validation = False
+        if self.filter_datetime_end is not None and datetime >  self.filter_datetime_end:
+            validation = False
+        return validation
+
     def strip_method_name(self, method_name):
         idx = method_name.find(", output row")
         return idx
@@ -181,12 +204,13 @@ def unit_test():
     """
         execute about 70mb size file with in 6 seconds
     """
+    test_datetime_begin = datetime.datetime(2014,8,17,17,30,0)
+    test_datetime_end = datetime.datetime(2014,8,17,17,32,0)
     start = time.clock()
     reader_obj = Reader()
-    f = open('reader_test','w+')
-    for itm in reader_obj.execute():
-        json.dump(itm, f, indent = 2)
-    f.close()
+    # TODO Test
+    for itm in reader_obj.execute(datetime_begin = test_datetime_begin, datetime_end = test_datetime_end):
+        print itm
     elapsed = (time.clock() - start)
     logger.info("elapsed time:" + str(elapsed))
 if __name__ == "__main__":

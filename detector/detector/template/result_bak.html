@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Pratt - Free Bootstrap 3 Theme">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="assets/ico/favicon.png">
+
+    <title>Analysis Result</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/assets/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/assets/css/button.css" rel="stylesheet">
+    <link href="/static/assets/css/dropzone.css" rel="stylesheet">
+    <link href="https://www.amcharts.com/lib/3/plugins/export/export.css" media="all" rel="stylesheet" type="text/css" />
+    
+    <!-- MetisMenu CSS -->
+    <link href="/static/assets/css/metisMenu.min.css" rel="stylesheet">
+
+    <!-- DataTables CSS -->
+    <!-- DataTables Responsive CSS -->
+
+    <!-- Custom styles for this template -->
+    <link href="/static/assets/css/main.css" rel="stylesheet">
+
+
+    <link href="/static/assets/css/dataTables.bootstrap.css" rel="stylesheet">
+
+    <!-- DataTables Responsive CSS -->
+    <link href="/static/assets/css/dataTables.responsive.css" rel="stylesheet">
+    <script src="/static/assets/js/jquery.min.js"></script>
+    <script src="/static/assets/js/smoothscroll.js"></script>
+    <script src="/static/assets/js/chart.js"></script>
+
+    
+    <script src="https://www.amcharts.com/lib/3/amcharts.js"></script>
+    <script src="https://www.amcharts.com/lib/3/serial.js"></script>
+    <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
+    <script src="https://www.amcharts.com/lib/3/plugins/export/export.js"></script>
+  </head>
+
+  <body data-spy="scroll" data-offset="0" data-target="#navigation">
+
+    <!-- Fixed navbar -->
+	    <div id="navigation" class="navbar navbar-default navbar-fixed-top">
+	      <div class="container">
+	        <div class="navbar-header">
+	          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	          </button>
+	          <a class="navbar-brand" href="/"><b>Detector</b></a>
+	        </div>
+	        <div class="navbar-collapse collapse">
+	          <ul class="nav navbar-nav">
+	            <li class="active"><a href="#input" class="smothscroll">statistical information</a></li>
+              <li><a href="#service" class="smothscroll">service</a></li>
+	            <li><a href="#method" class="smothscroll">method</a></li>
+	          </ul>
+	        </div><!--/.nav-collapse -->
+	      </div>
+	    </div>
+
+  <section id="input" name="statistical"></section>
+  <div id="intro">
+    <div class = "container">
+    <div id="page-wrapper">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="page-header" style= "text-align:center">Statistical Information</h1>
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->            
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <!-- /.panel-heading -->
+                        <div class="panel-body">
+                            <div class="dataTable_wrapper">
+                                <table class="table table-striped table-bordered table-hover" id="dataTables-statistic">     
+                                    <thead>
+                                        <tr>
+                                            <th>File Name</th>
+                                            <th>File Size(MB)</th>
+                                            <th>Status</th>
+                                            <th>Reason</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                      {%for itm in process_file%}
+                                      <tr>
+                                          <th>{{itm.name}}</th>
+                                          <th>{{itm.size}}</th>
+                                          <th>{{itm.status}}</th>
+                                          <th>{{itm.reason}}</th>
+                                      </tr> 
+                                      {%endfor%}
+                                    </tbody>
+                                </table>
+
+                                <div>
+                                  <div class="col-lg-6">
+                                    <h2>Total process file size :</h2>
+                                  </div> 
+                                  <div class="col-lg-6">
+                                    <h2>{{total_size}}MB</h2>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <div class="col-lg-6">
+                                    <h2>Total process time :</h2>
+                                  </div> 
+                                  <div class="col-lg-6">
+                                    <h2>{{elapsed}}s</h2>
+                                  </div>
+                                </div>
+                                
+                            </div>
+                            <!-- /.table-responsive -->
+                        </div>
+                        <!-- /.panel-body -->
+                    </div>
+                    <!-- /.panel -->
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->
+            
+            <!-- /.row -->
+        </div>
+      </div>
+        <!-- /#page-wrapper -->
+  </div><!--/ #introwrap -->   
+
+    
+  
+
+	<section id="service" name="service"></section>
+	<div id="intro">
+    <div class = "container">
+    <div id="page-wrapper">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="page-header" style= "text-align:center">Services Classification</h1>
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->            
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <!-- /.panel-heading -->
+                        <div class="panel-body">
+                            <div class="dataTable_wrapper">
+                                <table class="table table-striped table-bordered table-hover" id="dataTables-service">        
+                                    <thead>
+                                        <tr>
+                                            <th >Service ID</th>
+                                            <th>Max Time(ms)</th>
+                                            <th>Min Time(ms)</th>
+                                            <th>Avg Time(ms)</th> 
+                                            <th>Exe Count(ms)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                      {%for itm in services%}
+                                      <tr class = "clickable-row" data-href = "/services/{{itm.serviceId}}/">
+                                          <th>{{itm.serviceId}}</th>
+                                          <th>{{itm.max}}</th>
+                                          <th>{{itm.min}}</th>
+                                          <th>{{itm.avg}}</th>
+                                          <th>{{itm.cnt}}</th>
+                                      </tr> 
+                                      {%endfor%}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- /.table-responsive -->
+                        </div>
+                        <!-- /.panel-body -->
+                    </div>
+                    <!-- /.panel -->
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->
+            
+            <!-- /.row -->
+        </div>
+      </div>
+        <!-- /#page-wrapper -->
+  </div><!--/ #introwrap -->
+  <!-- Bar chart-->
+  <div class = "container">
+    <h2 style = "text-align:center">throughput</h2>
+    <div id = "smoothedLinerChart_1"></div>
+  </div>
+
+
+	<section id="method" name="method"></section>
+	<!-- INTRO WRAP -->
+	<div id="intro">
+    <div class = "container">
+		<div id="page-wrapper">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="page-header" style= "text-align:center">Hot Functions</h1>
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->            
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default" style = "width:1200px">
+                        <!-- /.panel-heading -->
+                        <div class="panel-body">
+                            <div class="dataTable_wrapper">
+                                <table class="table table-striped table-hover table-stripe" id="dataTables-method">       
+                                    <thead>
+                                        <tr>
+                                            <th>Method Name</th>
+                                            <th>Max Time(ms)</th>
+                                            <th>Min Time(ms)</th>
+                                            <th>Avg Time(ms)</th> 
+                                            <th>Score</th>
+                                            <th>Count</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                      {%for itm in rank_lst%}
+                                      <tr>
+                                          <th>{{itm.0}}</th>
+                                          <th>{{itm.1.max}}</th>
+                                          <th>{{itm.1.min}}</th>
+                                          <th>{{itm.1.avg}}</th>
+                                          <th>{{itm.1.score}}</th>
+                                          <th>{{itm.1.cnt}}</th>
+                                      </tr> 
+                                      {%endfor%}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- /.table-responsive -->
+                        </div>
+                        <!-- /.panel-body -->
+                    </div>
+                    <!-- /.panel -->
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->
+            
+            <!-- /.row -->
+        </div>
+      </div>
+        <!-- /#page-wrapper -->
+	</div><!--/ #introwrap -->
+  <div class = "container" id = "export_pdf_result">
+      <span class="button-wrap" >
+          <a href="/save_csv/" class="button button-pill" id = "export_csv">Export CSV</a>
+      </span>
+  </div>
+  
+
+	<div id="c">
+		<div class="container">
+			<p>Created by <a href="http://github.com/rjl493456442">Jialei Rong</a></p>
+
+		</div>
+	</div>
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="/static/assets/js/bootstrap.js"></script>
+    <script src="/static/assets/js/jquery.dataTables.min.js"></script>
+    <script src="/static/assets/js/dataTables.bootstrap.min.js"></script>
+    	<script>
+    	$('.carousel').carousel({
+    	  interval: 3500
+    	})
+      $(document).ready(function() {
+            $('#dataTables-service').DataTable({
+                    responsive: true,
+                    searching : false
+            });
+        });
+      $(document).ready(function() {
+            $('#dataTables-method').DataTable({
+                    "responsive": false,
+                    "searching" : false,
+                    "bAutoWidth": false,
+
+            });
+        });
+      $(document).ready(function() {
+            $('#dataTables-statistic').DataTable({
+                    responsive: true,
+                    searching : false
+            });
+        });
+
+      $(document).ready(function() {
+        $(".clickable-row").click(function() {
+            window.document.location = $(this).data("href");
+        });
+      });
+    	</script>
+      <script>
+            var chart;
+            var graph;
+            var chartData = [];
+            {%for itm in all_date_with_good_format%}
+            chartData.push({
+              "year": "{{itm.year}}",
+              "value": {{itm.value}}
+            });
+            {%endfor%}
+           
+            AmCharts.ready(function () {
+                // SERIAL CHART
+                chart = new AmCharts.AmSerialChart();
+
+                chart.dataProvider = chartData;
+                chart.marginLeft = 10;
+                chart.categoryField = "year";
+                chart.dataDateFormat = "JJ:NN";
+
+                // listen for "dataUpdated" event (fired when chart is inited) and call zoomChart method when it happens
+                chart.addListener("dataUpdated", zoomChart);
+
+                // AXES
+                // category
+                var categoryAxis = chart.categoryAxis;
+                categoryAxis.parseDates = true; // as our data is date-based, we set parseDates to true
+                categoryAxis.minPeriod = "mm"; // our data is yearly, so we set minPeriod to YYYY
+                categoryAxis.dashLength = 1;
+                categoryAxis.minorGridEnabled = true;
+                categoryAxis.minorGridAlpha = 0.1;
+                categoryAxis.offset = 0;
+                categoryAxis.dateFormats = [
+                    {period:'fff',format:'JJ:NN:SS'},
+                    {period:'ss',format:'JJ:NN:SS'},
+                    {period:'mm',format:'JJ:NN'},
+                    {period:'hh',format:'JJ:NN'},
+                    {period:'DD',format:'MMM DD'},
+                    {period:'WW',format:'MMM DD'},
+                    {period:'MM',format:'MMM'},
+                    {period:'YYYY',format:'YYYY'}
+                ];
+                // value
+                var valueAxis = new AmCharts.ValueAxis();
+                valueAxis.axisAlpha = 0;
+                valueAxis.inside = true;
+                valueAxis.dashLength = 1;
+                chart.addValueAxis(valueAxis);
+
+                // GRAPH
+                graph = new AmCharts.AmGraph();
+                graph.type = "smoothedLine"; // this line makes the graph smoothed line.
+                graph.lineColor = "#d1655d";
+                graph.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
+                graph.bullet = "round";
+                graph.bulletSize = 8;
+                graph.bulletBorderColor = "#FFFFFF";
+                graph.bulletBorderAlpha = 1;
+                graph.bulletBorderThickness = 2;
+                graph.lineThickness = 2;
+                graph.valueField = "value";
+                graph.balloonText = "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>";
+                chart.addGraph(graph);
+
+                // CURSOR
+                var chartCursor = new AmCharts.ChartCursor();
+                chartCursor.cursorAlpha = 0;
+                chartCursor.cursorPosition = "mouse";
+                chartCursor.categoryBalloonDateFormat = "JJ:NN";
+                chart.addChartCursor(chartCursor);
+
+                // SCROLLBAR
+                var chartScrollbar = new AmCharts.ChartScrollbar();
+                chart.addChartScrollbar(chartScrollbar);
+
+                chart.creditsPosition = "bottom-right";
+
+
+                // WRITE
+                chart.write("smoothedLinerChart_1");
+            });
+
+            // this method is called when chart is first inited as we listen for "dataUpdated" event
+            function zoomChart() {
+                // different zoom methods can be used - zoomToIndexes, zoomToDates, zoomToCategoryValues
+                //chart.zoomToDates(new Date(2014, 0), new Date(1984, 0));
+            }
+
+        </script>
+
+       
+	<script type="text/javascript" src = "/static/assets/js/dropzone.js"></script>
+  
+  </body>
+</html>

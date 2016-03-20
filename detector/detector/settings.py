@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'analyser',
+    'awesome_avatar',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -101,5 +102,6 @@ JSON_ROOT = os.path.join(BASE_DIR, 'analyser/static/assets/data')
 SESSION_SAVE_EVERY_REQUEST = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
+LOGIN_URL = '/login/'
 
 STATIC_URL = '/static/'

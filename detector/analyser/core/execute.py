@@ -3,7 +3,7 @@ from multiprocessing import *
 from multiprocessing.sharedctypes import  Value
 from multiprocessing.managers import BaseManager, SyncManager
 from config import CoreConfigure, logging
-from util import Node, Tree, InvertedIndex
+from util import Node, Tree, InvertedIndex, DateTimeHashTable, HistroyRecord
 import time
 import signal
 import os
@@ -28,11 +28,17 @@ class logProfiler(object):
         self.invertedIndex = InvertedIndex()
         self.services = {}
         self.final = []
-    def run(self, data = None, sessionid = None):
+        self.sessionid = None
+        self.username = None
+        self.datetime_str = None
+    def run(self, data = None, username = None, datetime_str = None):
         '''
             data: filename_list
             sessionid: user_session_id
         '''
+        self.username = username
+        self.datetime_str = datetime_str
+
         logger.info("begin run")
         # start cpu_num - 1 work process to build call tree for each request
         begin = time.clock()
@@ -46,16 +52,22 @@ class logProfiler(object):
         # merge for sub process
         self.gather()
         # insert all method to invertedindex
+        self.export_request_flow()
+        self.export_response_time()
         self.saveToInvertedIndex()
         # calcu score
         self.invertedIndex.calcuScore()
         # all score to final tree and convert tree to json format
-        self.addScoreTagAndToJson(sessionid)
+        self.addScoreTagAndToJson(username, datetime_str)
+        self.addScoreTagAndToJson(username, "temp")
+
+        # save execute info to file
+
         logger.info("total time elapsed" + str(time.clock() - begin))
         return self.final, self.invertedIndex.rankLst
-    def addScoreTagAndToJson(self, sessionid = None):
+    def addScoreTagAndToJson(self, username = None, datetime_str = None):
         for tree in self.final:
-            tree.addScoreTagAndToJson(self.invertedIndex.rankLst, sessionid)
+            tree.addScoreTagAndToJson(self.invertedIndex.rankLst, username, datetime_str)
     def saveToInvertedIndex(self):
         for itm in self.final:
             method_lst = itm.traverse()
@@ -72,10 +84,10 @@ class logProfiler(object):
                 break
             else:
                 # handle item
-                tree = Tree(item['serviceId'], item['total_time'])
+                tree = Tree(item['serviceId'], item['total_time'], item['datetime'])
                 method_lst = item['method_lst']
                 for method in method_lst:
-                    tree.insert(Node(method))
+                   tree.insert(Node(method))
                 # tree hash
                 tree.check_validation()
                 tree.root.getHash()
@@ -141,9 +153,9 @@ class logProfiler(object):
             process.daemon = True
         for process in self.processPool:
             process.start()
-    def generate_task(self, test_data):
+    def generate_task(self, data):
         #logger.info("read data")
-        for item in self.reader.execute(test_data):
+        for item in self.reader.execute(test_data = data):
             # add to shared queue
             self.shareQueue.put(item)
         #logger.info("read data finish")
@@ -164,11 +176,25 @@ class logProfiler(object):
             for i in trees[1:]:
                 tree.mergeDifferent(i)
             tree.calcuTreeAvg()
-            #logger.debug("tree check validation")
-            #tree.checkIsValid()
-            #logger.debug("final tree : \n" + tree.__repr__())
+            tree.save_occur_time(self.username, self.datetime_str)
+            # temp directory
+            tree.save_occur_time(self.username, "temp")
             self.final.append(tree)
         logger.info("Service total: " + str(len(self.final)))
+    def export_request_flow(self):
+        # criteria by minute
+        date_table =  DateTimeHashTable()
+        for final_tree in self.final:
+            for occur_date in final_tree.occurtime:
+                date_table.insert(occur_date)
+        date_lst =  date_table.export()
+        date_table.save_to_file(date_lst, self.username, self.datetime_str)
+        # temp directory
+        date_table.save_to_file(date_lst, self.username, "temp")
+    def export_response_time(self):
+        for final_tree in self.final:
+            final_tree.save_response_time(self.username, self.datetime_str)
+            final_tree.save_response_time(self.username, "temp")
 if __name__ == "__main__":
     logprofiler = logProfiler()
     logprofiler.run(None, None)

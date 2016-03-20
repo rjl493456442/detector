@@ -4,6 +4,7 @@ import json
 from config import CoreConfigure, logging
 import os
 from django.conf import settings
+import datetime
 
 logging.basicConfig(level = logging.DEBUG,
                     format = '%(asctime)s %(name)s %(levelname)s %(message)s',
@@ -144,11 +145,16 @@ class Node:
         else:
             return True
 class Tree(object):
-    def __init__(self, serviceId, totalTime):
+    def __init__(self, serviceId, totalTime, occurtime):
         self.serviceId = serviceId
         self.executeTime = totalTime
         self.root = Node({'name':'root','execute_time': totalTime, 'position':'-1'})
         self.hot_spot = None
+        self.occurtime =[occurtime]
+        self.response_time = [{
+            'occur_time': occurtime.strftime("%H:%M:%S"),
+            'response_time': totalTime
+        }]
     def insert(self, node):
         self.findFather(node)
     def findFather(self, node):
@@ -168,12 +174,16 @@ class Tree(object):
         return father
     def merge(self, tree):
         # for totally same tree
+        self.response_time.extend(tree.response_time)
+        self.occurtime.extend(tree.occurtime)
         if self.root.hashcode == tree.root.hashcode:
             self.root.merge(tree.root)
             return True
         else:
             return False
     def mergeDifferent(self, tree):
+        self.occurtime.extend(tree.occurtime)
+        self.response_time.extend(tree.response_time)
         self.root.mergeDifferent(tree.root)
     def calcuTreePercentage(self):
         self.root.calcuPercentage(self.root.executeTime)
@@ -193,12 +203,16 @@ class Tree(object):
         logger.debug("tree sum: " + str(sum))
     def traverse(self):
         return self.root.traverse()
-    def addScoreTagAndToJson(self, methodLst, sessionid):
-        logger.info("sessionid: " + sessionid)
-        directory = os.path.join(settings.JSON_ROOT, sessionid)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        filename = os.path.join(directory, str(self.serviceId)) + '.json'
+    def addScoreTagAndToJson(self, methodLst, username, datetime):
+        user_directory = os.path.join(settings.JSON_ROOT, username)
+        if not os.path.exists(user_directory):
+            os.makedirs(user_directory)
+
+        datetime_directory = os.path.join(user_directory, datetime)
+        if not os.path.exists(datetime_directory):
+            os.makedirs(datetime_directory)
+
+        filename = os.path.join(datetime_directory, str(self.serviceId)) + '.json'
         try:
             f = open(filename, 'w+')
             json.dump(self.root.traverse(methodLst), f, indent = 2)
@@ -220,6 +234,30 @@ class Tree(object):
         except Exception, e:
             print e
         return ret
+    def save_occur_time(self, username, datetime_str):
+        date_table = DateTimeHashTable()
+        for occur_date in self.occurtime:
+            date_table.insert(occur_date)
+        date_lst = date_table.export()
+        date_table.save_to_file(date_lst, username, datetime_str, self.serviceId)
+    def save_response_time(self, username, datetime):
+        user_directory = os.path.join(settings.JSON_ROOT, username)
+        if not os.path.exists(user_directory):
+            os.makedirs(user_directory)
+
+        datetime_directory = os.path.join(user_directory, datetime)
+        if not os.path.exists(datetime_directory):
+            os.makedirs(datetime_directory)
+
+        file_prefix = self.serviceId + "_response"
+        filename = os.path.join(datetime_directory, file_prefix) + '.json'
+        try:
+            f = open(filename, "w+")
+            json.dump(self.response_time, f, indent = 2)
+        except Exception, e:
+            logger.error(e)
+        finally:
+            f.close()
     def __repr__(self):
         return str(self.serviceId) + '\n' + self.root.__repr__()
 
@@ -285,3 +323,121 @@ class InvertedIndex:
             for i,j in services.items():
                 str = str +  "<%s-%s>\n" % (i, j)
         return str
+class DateTimeHashTable(object):
+    def __init__(self, flag = None):
+        self.__dates = {}
+        if flag:
+            self.flag = flag
+        else:
+            # set default format by minute
+            self.flag = 0
+    def __contain__(self, date):
+        return date in self.__dates.keys()
+    '''
+        use flag to specific precision of date
+        flag:
+            None -> default Hour
+            1    -> Day
+            2    -> Month
+            3    -> Year
+    '''
+    def insert(self, date):
+        # convert date
+        if self.flag == 0:
+            date = DateTimeHashTable.convertDateByMinute(date)
+        elif self.flag == 1:
+            date = DateTimeHashTable.convertDateByHour(date)
+        else:
+            date = DateTimeHashTable.convertDateByDay(date)
+        # insert
+        if date in self.__dates:
+            self.__dates[date] = self.__dates[date] + 1
+        else:
+            self.__dates[date] = 1
+    @staticmethod
+    def convertDateByMinute(date):
+        return datetime.datetime(date.year, date.month, date.day, date.hour, date.minute, 0)
+    @staticmethod
+    def convertDateByHour(date):
+        return datetime.datetime(date.year, date.month, date.day, date.hour, 0, 0)
+    @staticmethod
+    def convertDateByDay(date):
+        return datetime.datetime(date.year, date.month, date.day, 0, 0, 0)
+    def export(self):
+        date_content = []
+        for date, occur in self.__dates.items():
+            if self.flag == 0:
+                date_str = date.strftime("%Y-%m-%d %H:%M")
+            elif self.flag == 1:
+                date_str = date.strftime("%Y-%m-%d %H")
+            else:
+                date_str = date.strftime("%Y-%m-%d")
+            date_content.append({"year": date_str, "value": occur})
+        return date_content
+    def save_to_file(self, date_content, username, datetime_str, serviceId = None):
+        user_directory = os.path.join(settings.JSON_ROOT, username)
+        if not os.path.exists(user_directory):
+            os.makedirs(user_directory)
+
+        datetime_directory = os.path.join(user_directory, datetime_str)
+        if not os.path.exists(datetime_directory):
+            os.makedirs(datetime_directory)
+
+        if serviceId:
+            file_prefix = serviceId + "_date"
+        else:
+            file_prefix = "date"
+        filename = os.path.join(datetime_directory, file_prefix) + '.json'
+        try:
+            f = open(filename, 'w+')
+            json.dump(date_content, f, indent = 2)
+        except Exception,e:
+            logger.error(e)
+        finally:
+            f.close()
+
+class HistroyRecord:
+    '''
+        file_list
+        services
+        rank_list
+        total_size
+        elapsed
+    '''
+    def __init__(self):
+        self.__info = {}
+
+    def add_info(self, field, value):
+        self.__info[field] = value
+    def check_validation(self):
+        pass
+
+    def save_record(self, username, datetime_str = None):
+        if datetime_str is None:
+            datetime_str = "temp"
+        user_directory = os.path.join(settings.JSON_ROOT, username)
+        if not os.path.exists(user_directory):
+            os.makedirs(user_directory)
+
+        datetime_directory = os.path.join(user_directory, datetime_str)
+        if not os.path.exists(datetime_directory):
+            os.makedirs(datetime_directory)
+        file_prefix = "record"
+        filename = os.path.join(datetime_directory, file_prefix) + '.json'
+        try:
+            f = open(filename, 'w+')
+            json.dump(self.__info, f, indent = 2)
+        except Exception, e:
+            logger.error(e)
+        finally:
+            f.close()
+    def show_content(self):
+        logger.info(self.__info)
+def unittest():
+    date_table = DateTimeHashTable()
+    for i in xrange(60):
+        date = datetime.datetime(2016,2,29,23,i,0)
+        date_table.insert(date)
+    print date_table.export()
+if __name__ == "__main__":
+    unittest()

@@ -159,7 +159,8 @@ a:after {
 }
 #trigger
 {
-    padding-top : 80px;
+    padding-top : 20px;
+    padding-bottom: 20px;
     text-align : center;
 
 }
@@ -167,7 +168,7 @@ a:after {
 {
     padding-top: 80px;
     text-align: center;
-    padding-left: 135px;
+    padding-left: 130px;
 
 }
 
@@ -246,4 +247,22 @@ div.content {
   position: relative;
   left: 1020px;
   bottom: 11px; 
+}
+
+#smoothedLinerChart_1 {
+  width  :1150px;
+  height  : 160px;
+} 
+
+#response_time_chart {
+  width  :1150px;
+  height  : 160px;
+} 
+.button-left
+{
+  margin-right: 10px;
+}
+.button-right
+{
+  margin-left: 10px;
 }

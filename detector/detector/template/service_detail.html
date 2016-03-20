@@ -1,137 +1,451 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Pratt - Free Bootstrap 3 Theme">
-    <meta name="author" content="Alvarez.is - BlackTie.co">
-    
+<head>
+	<meta charset="utf-8" />
+	<link rel="icon" type="image/png" href="/static/assets_V3/img/favicon.ico">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 
+	<title>Result</title>
 
-    <title>Detector</title>
+	<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+    <meta name="viewport" content="width=device-width" />
 
-    <!-- Bootstrap core CSS -->
-    <link href="/static/assets/css/bootstrap.css" rel="stylesheet">
     <link href="/static/assets/css/button.css" rel="stylesheet">
-    <link href="/static/assets/css/dropzone.css" rel="stylesheet">
-    <link href="/static/assets/css/zoom_circle.css" rel="stylesheet">
-    <!-- Custom styles for this template -->
-    <link href="/static/assets/css/main.css" rel="stylesheet">
-    <script src="/static/assets/js/jquery.min.js"></script>
-    <script src="/static/assets/js/smoothscroll.js"></script>
+
+    <!-- Bootstrap core CSS     -->
+    <link href="/static/assets_V3/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Animation library for notifications   -->
+    <link href="/static/assets_V3/css/animate.min.css" rel="stylesheet"/>
+
+    <!--  Light Bootstrap Table core CSS    -->
+    <link href="/static/assets_V3/css/light-bootstrap-dashboard.css" rel="stylesheet"/>
+
+
+    <!--  CSS for Demo Purpose, don't include it in your project     -->
+    <link href="/static/assets_V3/css/demo.css" rel="stylesheet" />
+
+    <!-- table-->
+    <link href="/static/assets_table/css/fresh-bootstrap-table.css" rel="stylesheet" />
+    <!--     Fonts and icons     -->
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Roboto:400,700,300' rel='stylesheet' type='text/css'>
+    <link href="/static/assets_V3/css/pe-icon-7-stroke.css" rel="stylesheet" />
+
     <script type="text/javascript" src = "/static/assets/js/circle.js"></script>
     <script src="/static/assets/js/d3.min.js"></script>
-	<script src="/static/assets/js/tip.js"></script>
+    <script src="/static/assets/js/tip.js"></script>
+    <link href="/static/assets/css/zoom_circle.css" rel="stylesheet">
+
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="sidebar" data-color="purple" data-image="/static/assets_V3/img/sidebar-5.jpg">
+
+    <!--
+
+        Tip 1: you can change the color of the sidebar using: data-color="blue | azure | green | orange | red | purple"
+        Tip 2: you can also add an image using data-image tag
+
+    -->
+
+    	<div class="sidebar-wrapper">
+            <div class="logo">
+                <a href="/" class="simple-text">
+                    Detector
+                </a>
+            </div>
+
+            <ul class="nav">
+                <li>
+                    <a href="/dashboard/">
+                        <i class="pe-7s-graph"></i>
+                        <p>Dashboard</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="/profile/">
+                        <i class="pe-7s-user"></i>
+                        <p>User Profile</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="/history/">
+                        <i class="pe-7s-note2"></i>
+                        <p>History List</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="typography.html">
+                        <i class="pe-7s-news-paper"></i>
+                        <p>Trace Compare</p>
+                    </a>
+                </li>
+                <li class="active">
+                    <a href="/result/">
+                        <i class="pe-7s-science"></i>
+                        <p>Analysis Result</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="maps.html">
+                        <i class="pe-7s-map-marker"></i>
+                        <p>Maps</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="notifications.html">
+                        <i class="pe-7s-bell"></i>
+                        <p>Notifications</p>
+                    </a>
+                </li>
+            </ul>
+    	</div>
+    </div>
+
+    <div class="main-panel">
+        <nav class="navbar navbar-default navbar-fixed">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navigation-example-2">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#">Dashboard</a>
+                </div>
+                <div class="collapse navbar-collapse">
+                    <ul class="nav navbar-nav navbar-left">
+                        <li>
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <i class="fa fa-dashboard"></i>
+                            </a>
+                        </li>
+                        <li class="dropdown">
+                              <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <i class="fa fa-globe"></i>
+                                    <b class="caret"></b>
+                                    <span class="notification">5</span>
+                              </a>
+                              <ul class="dropdown-menu">
+                                <li><a href="#">Notification 1</a></li>
+                                <li><a href="#">Notification 2</a></li>
+                                <li><a href="#">Notification 3</a></li>
+                                <li><a href="#">Notification 4</a></li>
+                                <li><a href="#">Another notification</a></li>
+                              </ul>
+                        </li>
+                        <li>
+                           <a href="">
+                                <i class="fa fa-search"></i>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                           <a>
+                               {{username}}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/logout/">
+                                Log out
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
 
 
-  </head>
-
-  <body data-spy="scroll" data-offset="0" data-target="#navigation">
-
-    <!-- Fixed navbar -->
-	    <div id="navigation" class="navbar navbar-default navbar-fixed-top">
-	      <div class="container">
-	        <div class="navbar-header">
-	          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-	            <span class="icon-bar"></span>
-	            <span class="icon-bar"></span>
-	            <span class="icon-bar"></span>
-	          </button>
-	          <a class="navbar-brand" href="/"><b>Detector</b></a>
-	        </div>
-	        <div class="navbar-collapse collapse">
-	          <ul class="nav navbar-nav">
-	          	<li class="active"><a href="#hot_spot" class="smothscroll">Hot Spot</a></li>
-	            <li><a href="#zoom_circle" class="smothscroll">Zoom Pack</a></li>
-	          </ul>
-	        </div><!--/.nav-collapse -->
-	      </div>
-	    </div>
-	
-	<section id = 'hot_spot'></section>
-		<div class = "container">
-			<div class = "row">
-				<h1 class="centered" style = "padding-top:30px">Hot Spot</h1>
-				<div class="panel panel-default">
-                        
-                        <div class="panel-body">
-                            <div class="table-responsive">
-                                <table class="table">
+        <div class="content">
+            <div class="container-fluid">
+                <!-- process file -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="header">
+                                <h4 class="title">Hot Spot</h4>
+                            </div>
+                            <div class="content table-responsive table-full-width">
+                                <table class="table table-hover table-striped">
                                     <thead>
-                                        <tr>
-                                            <th>Method Name</th>
-                                            <th>percentage</th>
-                                        </tr>
+                                        <th>Method Name</th>
+                                        <th>percentage</th>
                                     </thead>
                                     <tbody>
-                        				{%for itm in service.hot_spot%}
-                                        <tr class="info">
+                                        {%for itm in service.hot_spot%}
+                                        <tr>
                                             <td>{{itm.method_name}}</td>
                                             <td>{{itm.percentage}}</td>
                                         </tr>
                                         {%endfor%}
                                     </tbody>
                                 </table>
+
                             </div>
                         </div>
                     </div>
-			</div>
+                </div>
+                <hr>
+                <!-- services thoughput chart-->
+                <div class = "row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="header">
+                                <h4 class="title">Throughput</h4>
+                            </div>
+                            <div class = "container">
+                                <div id = "smoothedLinerChart_1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- services response time chart-->
+                <div class = "row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="header">
+                                <h4 class="title">Response Time</h4>
+                            </div>
+                            <div class = "container">
+                                <div id = "response_time_chart"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-		</div>
-	<section id="zoom_circle" name = 'circle'></section>
-		<div class = "container">
-			<div class = "row">
-				<h1 class="centered" style = "padding-top:30px">Zoom Pack</h1>
-				<div id = 'circle'></div>
-			</div>
-		</div>
-	
-	
-	
-	<div id="c">
-		<div class="container">
-			<p>Created by <a href="http://github.com/rjl493456442">Jialei Rong</a></p>
+                <!-- circle zoom pack-->
+                <div class = "row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="header">
+                                <h4 class="title">Zoom Pack</h4>
+                            </div>
+                            <div id = 'circle'></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- circle zoom pack end-->
 
-		</div>
-	</div>
+            </div>
+        </div>
+    </div>
+</div>
 
 
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="/static/assets/js/bootstrap.js"></script>
-	<script>
-	$('.carousel').carousel({
-	  interval: 3500
-	})
-	</script>
-	<script type="text/javascript">
-		$(document).ready(function() {
-		    $("#post").click(function(e) {
-		        e.preventDefault();
-		        var data = {
-		            'foo': 'bar'
-		        }
+</body>
 
-		        $.ajax({
-		            "type": "POST",
-		            "dataType": "json",
-		            "url": "/upload/",
-		            "data": data,
-		            "success": function(result) {
-		                console.log(result);
-		            },
-		        });
-		    });
-		});
-		</script>
-	<script>
-		$(document).ready(function() {
-    		create_circle("{{path}}");
-		});
-	</script>
-	<script type="text/javascript" src = "/static/assets/js/dropzone.js"></script>
-	<script type="text/javascript" src = "/static/assets/js/main.js"></script>
-	
-  </body>
+    <!--   Core JS Files   -->
+    <script type="text/javascript" src="/static/assets_table/js/jquery-1.11.2.min.js"></script>
+	<script src="/static/assets_V3/js/bootstrap.min.js" type="text/javascript"></script>
+
+    <!-- Light Bootstrap Table Core javascript and methods for Demo purpose -->
+	<script src="/static/assets_V3/js/light-bootstrap-dashboard.js"></script>
+
+	<!-- Light Bootstrap Table DEMO methods, don't include it in your project! -->
+	<script src="/static/assets_V3/js/demo.js"></script>
+
+    <script type="text/javascript" src="/static/assets_table/js/bootstrap.js"></script>
+    <script type="text/javascript" src="/static/assets_table/js/bootstrap-table.js"></script>
+
+    <!-- export plugin js>
+    <script type="text/javascript" src="/static/table_export_plugin/libs/FileSaver/FileSaver.min.js"></script>
+    <script type="text/javascript" src="/static/table_export_plugin/libs/jsPDF/jspdf.min.js"></script>
+    <script type="text/javascript" src="/static/table_export_plugin/libs/jsPDF-AutoTable/jspdf.plugin.autotable.js"></script>
+    <script type="text/javascript" src="/static/table_export_plugin/libs/html2canvas/html2canvas.min.js"></script>
+    <script type="text/javascript" src="/static/table_export_plugin/tableExport.min.js"></script>
+    <-->
+
+    <script src="/static/assets_V3/js/amcharts.js"></script>
+    <script src="/static/assets_V3/js/serial.js"></script>
+    <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
+    <script src="https://www.amcharts.com/lib/3/themes/patterns.js"></script>
+    <script src="https://www.amcharts.com/lib/3/plugins/export/export.js"></script>
+    <script>
+            var chart;
+            var graph;
+            var chart_response_time;
+            var graph_response_time;
+            var chartData_throughput = [];
+            {%for itm in all_date_with_good_format%}
+            chartData_throughput.push({
+              "year": "{{itm.year}}",
+              "value": {{itm.value}}
+            });
+            {%endfor%}
+            var chartData_response_time  = [];
+            {% for itm in all_response_time%}
+            chartData_response_time.push(
+            {
+                "date": "{{itm.occur_time}}",
+                "value" : {{itm.response_time}}
+            });
+            {% endfor %}
+
+            AmCharts.ready(function () {
+                // SERIAL CHART
+                chart = new AmCharts.AmSerialChart();
+
+                chart.dataProvider = chartData_throughput;
+                chart.marginLeft = 10;
+                chart.categoryField = "year";
+                chart.dataDateFormat = "JJ:NN";
+
+                // listen for "dataUpdated" event (fired when chart is inited) and call zoomChart method when it happens
+                //chart.addListener("dataUpdated", zoomChart);
+
+                // AXES
+                // category
+                var categoryAxis = chart.categoryAxis;
+                categoryAxis.parseDates = true; // as our data is date-based, we set parseDates to true
+                categoryAxis.minPeriod = "mm"; // our data is yearly, so we set minPeriod to YYYY
+                categoryAxis.dashLength = 1;
+                categoryAxis.minorGridEnabled = true;
+                categoryAxis.minorGridAlpha = 0.1;
+                categoryAxis.offset = 0;
+                categoryAxis.dateFormats = [
+                    {period:'fff',format:'JJ:NN:SS'},
+                    {period:'ss',format:'JJ:NN:SS'},
+                    {period:'mm',format:'JJ:NN'},
+                    {period:'hh',format:'JJ:NN'},
+                    {period:'DD',format:'MMM DD'},
+                    {period:'WW',format:'MMM DD'},
+                    {period:'MM',format:'MMM'},
+                    {period:'YYYY',format:'YYYY'}
+                ];
+                // value
+                var valueAxis = new AmCharts.ValueAxis();
+                valueAxis.axisAlpha = 0;
+                valueAxis.inside = true;
+                valueAxis.dashLength = 1;
+                chart.addValueAxis(valueAxis);
+
+                // GRAPH
+                graph = new AmCharts.AmGraph();
+                graph.type = "smoothedLine"; // this line makes the graph smoothed line.
+                graph.lineColor = "#d1655d";
+                graph.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
+                graph.bullet = "round";
+                graph.bulletSize = 8;
+                graph.bulletBorderColor = "#FFFFFF";
+                graph.bulletBorderAlpha = 1;
+                graph.bulletBorderThickness = 2;
+                graph.lineThickness = 2;
+                graph.valueField = "value";
+                graph.balloonText = "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>";
+                chart.addGraph(graph);
+
+                // CURSOR
+                var chartCursor = new AmCharts.ChartCursor();
+                chartCursor.cursorAlpha = 0;
+                chartCursor.cursorPosition = "mouse";
+                chartCursor.categoryBalloonDateFormat = "JJ:NN";
+                chart.addChartCursor(chartCursor);
+
+                // SCROLLBAR
+                var chartScrollbar = new AmCharts.ChartScrollbar();
+                chart.addChartScrollbar(chartScrollbar);
+
+                chart.creditsPosition = "bottom-right";
+
+
+                // WRITE
+                chart.write("smoothedLinerChart_1");
+                
+                /*
+                    render response time chart
+                */
+                var debug_data = 
+                [
+                    {
+                        "date": "15:23:23",
+                        "value": 13
+                    }, {
+                        "date": "15:23:24",
+                        "value": 11
+                    }
+                ];
+                chart_response_time = new AmCharts.AmSerialChart();
+
+                chart_response_time.dataProvider = chartData_response_time;
+                chart_response_time.marginLeft = 10;
+                chart_response_time.categoryField = "date";
+                chart_response_time.dataDateFormat = "JJ:NN:SS";
+
+
+                // AXES
+                // category
+                var categoryAxis_1 = chart.categoryAxis;
+                categoryAxis_1.parseDates = true; // as our data is date-based, we set parseDates to true
+                categoryAxis_1.minPeriod = "ss"; // our data is yearly, so we set minPeriod to YYYY
+                categoryAxis_1.dashLength = 1;
+                categoryAxis_1.minorGridEnabled = true;
+                categoryAxis_1.minorGridAlpha = 0.1;
+                categoryAxis_1.offset = 0;
+                categoryAxis_1.dateFormats = [
+                    {period:'fff',format:'JJ:NN:SS'},
+                    {period:'ss',format:'JJ:NN:SS'},
+                    {period:'mm',format:'JJ:NN'},
+                    {period:'hh',format:'JJ:NN'},
+                    {period:'DD',format:'MMM DD'},
+                    {period:'WW',format:'MMM DD'},
+                    {period:'MM',format:'MMM'},
+                    {period:'YYYY',format:'YYYY'}
+                ];
+                // value
+                var valueAxis_1 = new AmCharts.ValueAxis();
+                valueAxis_1.axisAlpha = 0;
+                valueAxis_1.inside = true;
+                valueAxis_1.dashLength = 1;
+                chart_response_time.addValueAxis(valueAxis_1);
+
+                // GRAPH
+                graph_response_time = new AmCharts.AmGraph();
+                graph_response_time.type = "smoothedLine"; // this line makes the graph smoothed line.
+                graph_response_time.lineColor = "#d1655d";
+                graph_response_time.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
+                graph_response_time.bullet = "round";
+                graph_response_time.bulletSize = 8;
+                graph_response_time.bulletBorderColor = "#FFFFFF";
+                graph_response_time.bulletBorderAlpha = 1;
+                graph_response_time.bulletBorderThickness = 2;
+                graph_response_time.lineThickness = 2;
+                graph_response_time.valueField = "value";
+                graph_response_time.balloonText = "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>";
+                chart_response_time.addGraph(graph_response_time);
+
+                // CURSOR
+                var chartCursor_1 = new AmCharts.ChartCursor();
+                chartCursor_1.cursorAlpha = 0;
+                chartCursor_1.cursorPosition = "mouse";
+                chartCursor_1.categoryBalloonDateFormat = "JJ:NN:SS";
+                chart_response_time.addChartCursor(chartCursor_1);
+
+                // SCROLLBAR
+                var chartScrollbar_1 = new AmCharts.ChartScrollbar();
+                chart_response_time.addChartScrollbar(chartScrollbar_1);
+
+                chart_response_time.creditsPosition = "bottom-right";
+
+
+                // WRITE
+                chart_response_time.write("response_time_chart");
+            });
+    </script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+        $(".clickable-row").click(function() {
+            window.document.location = $(this).data("href");
+        });
+      });
+    </script>
+    <script>
+        $(document).ready(function() {
+            create_circle("{{path}}");
+        });
+    </script>
 </html>

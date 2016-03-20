@@ -175,9 +175,23 @@
 
 .dropzone 
 {
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+    border-bottom-right-radius: 30px;
+    border-bottom-left-radius: 30px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    min-width:300px;
+    min-height: 200px;
+    border:3px dashed silver;
+}
+.select_date
+{
     min-width:300px;
     min-height: 100px;
-    border:3px dashed silver;
+
 }
   .dropzone.dz-clickable {
     cursor: pointer; }

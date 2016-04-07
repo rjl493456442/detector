@@ -162,11 +162,9 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="header">
-                            <h4 class="title" style = "text-align:center">Top 5 functions Bar chart</h4>
+                            <h4 class="title" style = "text-align:center">Hot Spots Comparison</h4>
                         </div>
-                        <div style="width: 100%">
-                            <canvas id="canvas1" height="130"></canvas>
-                        </div>
+                        <div id = "hotspot_comparison_div"></div>
                     </div>
                 </div>
 
@@ -185,19 +183,43 @@
 
                         <table id="fresh-table1" class="table">
                             <thead>
-                                <th data-field="name" data-sortable="true">Name</th>
-                                {%for itm in record_contents%}
-                                <th data-field="score_{{itm.date}}" data-sortable="true">{{itm.date}}</th>
-                                {%endfor%}
+                                <th data-field="name" data-sortable="true">Hot Spot</th>
+                                <th data-field="score_{{compare_record.file_list.0.name}}" data-sortable="true">
+                                    {{baseline_record.file_list.0.name}}(Baseline)
+                                    <br/>
+                                    (Score, Response Time)
+                                </th>
+                                <th data-field="score_{{target_record.file_list.0.name}}" data-sortable="true">
+                                    {{target_record.file_list.0.name}}(Target)
+                                    <br/>
+                                    (Score, Response Time)
+                                </th>
+                                <th>
+                                    GR(%)
+                                    <br/>
+                                    (Score, Response Time)
+                                </th>
                                 <th>Status</th>
                             </thead>
                             <tbody>
-                                {%for itm in all_functions%}
+                                {%for itm in response_data_function_level%}
                                 <tr>
                                     <td>{{itm.function_name}}</td>
-                                    {%for s in itm.score%}
-                                        <td>{{s}}</td>
-                                    {%endfor%}
+                                    <td>
+                                        {{itm.baseline_score}}
+                                        <br/>
+                                        {{itm.baseline_response_time}}(ms)
+                                    </td>
+                                    <td>
+                                        {{itm.target_score}}
+                                        <br/>
+                                        {{itm.target_response_time}}(ms)
+                                    </td>
+                                    <td>
+                                        ({{itm.GR_score}}%)
+                                        <br/>
+                                        ({{itm.GR_response_time}}%)
+                                    </td>
                                     <td>{{itm.status}}</td>
                                 </tr> 
                                 {%endfor%}
@@ -205,7 +227,81 @@
                         </table>
                         </div>
                     </div>
-                </div>               
+                </div>  
+
+                <br/>
+
+                <!-- services statistic -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="fresh-table">
+                    <!--    Available colors for the full background: full-color-blue, full-color-azure, full-color-green, full-color-red, full-color-orange
+                            Available colors only for the toolbar: toolbar-color-blue, toolbar-color-azure, toolbar-color-green, toolbar-color-red, toolbar-color-orange
+                    -->
+                        <div class="toolbar2">
+                            <button id="alertBtn2" class="btn btn-default">Services Comparison</button>
+                        </div>
+
+                        <table id="fresh-table2" class="table">
+                            <thead>
+                                <th data-field="name" data-sortable="true">Web Services</th>
+                                <th data-field="score_{{compare_record.file_list.0.name}}" data-sortable="true">
+                                    {{baseline_record.file_list.0.name}}(Baseline)
+                                    <br/>
+                                    (Hot Spot, Response Time)
+                                </th>
+                                <th data-field="score_{{target_record.file_list.0.name}}" data-sortable="true">
+                                    {{target_record.file_list.0.name}}(Target)
+                                    <br/>
+                                    (Hot Spot, Response Time)
+                                </th>
+                                <th>
+                                    GR(%)
+                                    <br/>
+                                    (Hot Spot, Response Time)
+                                </th>
+                            </thead>
+                            <tbody>
+                                {%for itm in response_data_service_level%}
+                                <tr>
+                                    <td>
+                                        <!-- service name -->
+                                        {{itm.target_service.service.0}}
+                                        <br/>
+                                        {{itm.target_service.service.1}}
+                                    </td>
+                                    <td>
+                                        <!-- compare record service's hot_spot -->
+                                        {%for hot_spot in itm.baseline_service.hot_spot%}
+                                        {{hot_spot.method_name}} ({{hot_spot.percentage}}%)
+                                        <br/>
+                                        {%endfor%}
+                                        {{itm.baseline_service.response_time}}(ms)
+                                    </td>
+                                    <td>
+                                        <!-- target record service's hot_spot -->
+                                        {%for hot_spot in itm.target_service.hot_spot%}
+                                        ({{hot_spot.percentage}}%)
+                                        <br/>
+                                        {%endfor%}
+                                        {{itm.target_service.response_time}}(ms)
+                                    </td>
+                                    <td>
+                                        <!-- GR -->
+                                        {%for hot_spot in itm.target_service.hot_spot%}
+                                        ({{hot_spot.GR}}%)
+                                        <br/>
+                                        {%endfor%}
+                                        ({{itm.GR_response_time}}%)
+                                    </td>
+                                </tr> 
+                                {%endfor%}
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div> 
+
             </div>
         </div>
     </div>
@@ -225,27 +321,12 @@
     <script type="text/javascript" src="/static/assets_table/js/bootstrap.js"></script>
     <script type="text/javascript" src="/static/assets_table/js/bootstrap-table.js"></script>
 
-    <!-- export plugin js>
-    <script type="text/javascript" src="/static/table_export_plugin/libs/FileSaver/FileSaver.min.js"></script>
-    <script type="text/javascript" src="/static/table_export_plugin/libs/jsPDF/jspdf.min.js"></script>
-    <script type="text/javascript" src="/static/table_export_plugin/libs/jsPDF-AutoTable/jspdf.plugin.autotable.js"></script>
-    <script type="text/javascript" src="/static/table_export_plugin/libs/html2canvas/html2canvas.min.js"></script>
-    <script type="text/javascript" src="/static/table_export_plugin/tableExport.min.js"></script>
-    <-->
-
     <script src="/static/assets_V3/js/amcharts.js"></script>
     <script src="/static/assets_V3/js/serial.js"></script>
     <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
     <script src="https://www.amcharts.com/lib/3/plugins/export/export.js"></script>
     <script src="/static/chart/Chart.js"></script>
-    <script src="/static/sco_js/js/sco.modal.js"></script>
-    <script type="text/javascript">
-        $(document).ready(function() {
-        $(".clickable-row").click(function() {
-            window.document.location = $(this).data("href");
-        });
-      });
-    </script>  
+    <script src="/static/sco_js/js/sco.modal.js"></script> 
     <script type="text/javascript">
         var $table = $('#fresh-table1'),
             full_screen = false;
@@ -319,80 +400,97 @@
             });
         });
     </script>
-    <script>
-    var randomScalingFactor = function(){ return Math.round(Math.random()*100)};
+    <script type="text/javascript">
+        var dataProvider = [];
+        {%for itm in top_10_hot_spot%}
+            var baseline_score = {{itm.baseline_score}} * -1;
+            var temp = {
+                "method_name" : "{{itm.function_name}}",
+                "compare" : baseline_score,
+                "target" : {{itm.target_score}}
+            }
+            dataProvider.push(temp);
+        {%endfor%}
+        $().ready(function(){
+            AmCharts.makeChart("hotspot_comparison_div", {
+              "type": "serial",
+              "theme": "light",
+              "rotate": true,
+              "marginBottom": 50,
+              "dataProvider": dataProvider, 
+              "startDuration": 1,
+              "graphs": [{
+                "fillAlphas": 0.8,
+                "lineAlpha": 0.2,
+                "type": "column",
+                "valueField": "compare",
+                "title": "Baseline Record",
+                "labelText": "[[value]]",
+                "clustered": false,
+                "labelFunction": function(item) {
+                  return Math.abs(item.values.value);
+                },
+                "balloonFunction": function(item) {
+                  return item.category + ": " + Math.abs(item.values.value);
+                },
+              }, {
+                "fillAlphas": 0.8,
+                "lineAlpha": 0.2,
+                "type": "column",
+                "valueField": "target",
 
-    var all_colors = [];
-    all_colors.push(
-    {
-        fillColor : "rgba(220,220,220,0.5)",
-        strokeColor : "rgba(220,220,220,0.8)",
-        highlightFill: "rgba(220,220,220,0.75)",
-        highlightStroke: "rgba(220,220,220,1)",
-    });
-    all_colors.push(
-    {
-        fillColor : "rgba(149,220,187,0.5)",
-        strokeColor : "rgba(220,220,220,0.8)",
-        highlightFill: "rgba(220,220,220,0.75)",
-        highlightStroke: "rgba(220,220,220,1)",
-    });
-    all_colors.push(
-    {
-        fillColor : "rgba(149,167,187,0.5)",
-        strokeColor : "rgba(220,220,220,0.8)",
-        highlightFill: "rgba(220,220,220,0.75)",
-        highlightStroke: "rgba(220,220,220,1)",
-    });
-    all_colors.push(
-    {
-        fillColor : "rgba(149,98,187,0.5)",
-        strokeColor : "rgba(220,220,220,0.8)",
-        highlightFill: "rgba(220,220,220,0.75)",
-        highlightStroke: "rgba(220,220,220,1)",
-    });
-    all_colors.push(
-    {
-        fillColor : "rgba(220,220,220,0.5)",
-        strokeColor : "rgba(220,220,220,0.8)",
-        highlightFill: "rgba(220,220,220,0.75)",
-        highlightStroke: "rgba(220,220,220,1)",
-    });
-    all_colors.push(
-    {
-        fillColor : "rgba(151,187,205,0.5)",
-        strokeColor : "rgba(151,187,205,0.8)",
-        highlightFill : "rgba(151,187,205,0.75)",
-        highlightStroke : "rgba(151,187,205,1)",
-    });
-    var all_labels = [];
-    var all_datasets_bar = [];
-    var all_datasets_rader = [];
-    var count = 0;
-    
-    {%for itm in top_five_template_with_shorten_name%}
-        all_labels.push("{{itm.0}}");
-    {%endfor%}
-    {%for itm in top_five_date%}
-        all_datasets_bar.push(
-        {
-            fillColor: all_colors[count]['fillColor'],
-            strokeColor : all_colors[count]['strokeColor'],
-            highlightFill : all_colors[count]['highlightFill'],
-            HighlightStroke : all_colors[count]['highlightStroke'],
-            data: {{itm.score}}
+                "title": "Target Record",
+                "labelText": "[[value]]",
+                "clustered": false,
+                "labelFunction": function(item) {
+                  return Math.abs(item.values.value);
+                },
+                "balloonFunction": function(item) {
+                  return item.category + ": " + Math.abs(item.values.value);
+                },
+              }],
+              "categoryField": "method_name",
+              "categoryAxis": {
+                "gridPosition": "middle",
+                "gridAlpha": 0.2,
+                "axisAlpha": 0,
+                "labelsEnabled": false,
+              },
+              "valueAxes": [{
+                "gridAlpha": 0,
+                "ignoreAxisWidth": true,
+                "labelFunction": function(value) {
+                  return Math.abs(value);
+                },
+                "guides": [{
+                  "value": 0,
+                  "lineAlpha": 0.2
+                }]
+              }],
+              "balloon": {
+                "fixedPosition": true,
+                "maxWidth": 400
+              },
+              "chartCursor": {
+                "valueBalloonsEnabled": false,
+                "cursorAlpha": 0.05,
+                "fullWidth": true
+              },
+              "allLabels": [{
+                "text": "Baseline Record",
+                "x": "28%",
+                "y": "97%",
+                "bold": true,
+                "align": "middle"
+              }, {
+                "text": "Target Record",
+                "x": "75%",
+                "y": "97%",
+                "bold": true,
+                "align": "middle"
+              }], 
+            });
         });
-        count += 1;
-    {%endfor%}
-    var barChartData = {
-        labels : all_labels,
-        datasets: all_datasets_bar
-    }
-    window.onload = function(){
-        var ctx = document.getElementById("canvas1").getContext("2d");
-        window.myBar = new Chart(ctx).Bar(barChartData, {
-            responsive : true
-        });
-    }
     </script>
+
 </html>

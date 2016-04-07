@@ -175,7 +175,6 @@ def execute(request):
                 tool = logProfiler()
                 begin = time.clock()
                 datetime_str = datetime.datetime.now().strftime("%I:%M%p on %B %d,%Y")
-                logger.info(datetime_str)
                 services_tree, rank_lst = tool.run(valid_data, request.user.username, datetime_str)
                 elapsed = time.clock() - begin
 
@@ -379,14 +378,51 @@ def record_detail(request, id):
         return HttpResponseRedirect('/error/500/')
 @login_required
 def make_comparison(request):
+    """ handle the comparison http request
+        gather all request info to a json and transfer all data to comparison function
+    Args:
+        1) Http Request Object
+    Returns:
+
+    Raises:
+    """
+    # TODO specify the main record
+    '''
+        json file format
+        [
+            {
+                'file' : filename,
+                'date' : record_date
+            },
+            {
+                'file' : filename,
+                'date' : record_date
+            },
+            ...
+            main_record_position
+        ]
+    '''
     if request.method == "POST" and request.is_ajax():
         all_record = []
         for key, value in request.POST.items():
-            all_record.append({
-                'file' : key,
-                'date' : value
-            })
+            if key == 'baseline':
+                baseline = value
+            else:
+                all_record.append({
+                    'file' : key,
+                    'date' : value
+                })
+        if len(all_record) != 2:
+            logger.error("comparison record item must be 2")
+            return HttpResponse(json.dumps({'status':800}))
         file_path = os.path.join(settings.JSON_ROOT, request.user.username) + "/temp/comparison.json"
+        # temporary set the first record is the main record
+        # TODO
+        for index, record in enumerate(all_record):
+            if record['file'] == baseline:
+                baseline_position = index
+
+        all_record.append(baseline_position)
         try:
             f = open(file_path, 'w+')
             json.dump(all_record, f, indent = 2)
@@ -399,10 +435,21 @@ def make_comparison(request):
 
 @login_required
 def comparison_result(request):
+    """demostrate result that target record compared to the baseline
+    Args:
+        1) Http Request Object
+
+    Returns:
+
+    Raises:
+    """
     file_path = os.path.join(settings.JSON_ROOT, request.user.username) + "/temp/comparison.json"
     try:
         f = open(file_path, 'r')
         records = json.load(f)
+        if len(records) != 3:
+            logger.error("comparison record error")
+            return HttpResponseRedirect("/error/500")
     except Exception, e:
         logger.error(e)
         return HttpResponseRedirect('/error/500/')
@@ -410,14 +457,22 @@ def comparison_result(request):
         f.close()
 
     record_contents = []
-    lastest_date = None
-    dates = []
-    for record in records:
+    # get the position of the main record
+    baseline_position = records[-1]
+    if baseline_position is 0:
+        analysis_position = 1
+    else:
+        analysis_position = 0
+    # last element in records is the position of the main record
+    # the length of the records should be 3, contain 2 comparison records and a position to specify the main record
+    for record in records[:-1]:
         file_path = os.path.join(settings.JSON_ROOT, request.user.username) + "/" + record['date'] + "/record.json"
-        dates.append(record['date'])
         try:
             f = open(file_path, 'r')
             record_content = json.load(f)
+            '''
+                record_contents contain the mapping between the date and relevant record content
+            '''
             record_contents.append({
                 'date': record['date'],
                 'content': record_content
@@ -427,38 +482,115 @@ def comparison_result(request):
             return HttpResponseRedirect('/error/500/')
         finally:
             f.close()
-    lastest_date_position = get_lastest_date(dates)
-    template_record = record_contents[0]['content']
-    template = template_record['rank_list']
-    top_five_template = template[:5]
-    top_five_template_with_shorten_name = shorten_function_name(top_five_template)
+    # get the target record and baseline record
+    target_record = record_contents[analysis_position]['content']
+    baseline_record = record_contents[baseline_position]['content']
 
-    all_functions = []
-    all_date = []
-    for record_content in record_contents:
-        all_scores = get_all_function_score(record_content['content']['rank_list'], template)
-        all_date.append({
-            'date': record_content['date'],
-            'score': all_scores,
-        })
-    for function in template:
-        scores = []
-        for record_content in record_contents:
-            rank_list = record_content['content']['rank_list']
-            score = get_function_score(rank_list, function[0])
-            scores.append(score)
-
-        if is_min_element_of_array(lastest_date_position, scores):
-            status = "Improved"
+    '''
+        function level process
+        compare all function in score, response time aspects
+    '''
+    baseline_function_list = baseline_record['rank_list']
+    target_record_scores, target_record_response_times = get_all_function_info(target_record['rank_list'], baseline_function_list)
+    baseline_record_scores, baseline_record_response_times = get_all_function_info(baseline_record['rank_list'], baseline_function_list)
+    function_name_list_with_shorten_name = shorten_function_name(baseline_function_list)
+    # construct response data
+    response_data_function_level = []
+    for index, entry in enumerate(function_name_list_with_shorten_name):
+        target_score = target_record_scores[index]
+        baseline_score = baseline_record_scores[index]
+        target_avg_response_time = target_record_response_times[index]
+        baseline_avg_response_time = baseline_record_response_times[index]
+        if target_score < baseline_score:
+            status = "Imporved"
         else:
             status = "Not Improved"
-        all_functions.append({
-            'function_name' : shorten_function_name_by_method_name(function[0]),
-            'score' : scores,
-            'status': status
+        # calcu GR
+        try:
+            GR_score = (target_score - baseline_score) / target_score
+        except ZeroDivisionError,e :
+            GR_score = 0
+        try:
+            GR_response_time = (target_avg_response_time - baseline_avg_response_time) / target_avg_response_time
+        except ZeroDivisionError,e :
+            GR_response_time = 0
+
+        function_name = entry
+        response_data_function_level.append({
+            'function_name' : function_name,
+            'baseline_score' :  baseline_score,
+            'target_score' : target_score,
+            'baseline_response_time' : baseline_avg_response_time,
+            'target_response_time' : target_avg_response_time,
+            'GR_score' : round(GR_score * 100, 2),
+            'GR_response_time' : round(GR_response_time * 100, 2),
+            'status' : status
         })
-    top_five_date = all_date[:5]
+    '''
+        services level process
+    '''
+    baseline_standard_services = baseline_record['services']
+
+    target_services_info = get_all_service_info(target_record['services'], baseline_standard_services)
+    baseline_services_info = get_all_service_info(baseline_record['services'], baseline_standard_services)
+
+    response_data_service_level = []
+    for index, service_entry in enumerate(baseline_services_info):
+        target_service = target_services_info[index]
+        baseline_service = baseline_services_info[index]
+        if target_service and baseline_service:
+            for _, hot_spot in enumerate(baseline_service['hot_spot']):
+                if target_service['hot_spot'][_]:
+                    target_percentage = target_service['hot_spot'][_]['percentage']
+                if baseline_service['hot_spot'][_]:
+                    baseline_percentage = baseline_service['hot_spot'][_]['percentage']
+                # calcu GR
+                try:
+                    if target_percentage and baseline_percentage:
+                        GR_percentage = (target_percentage - baseline_percentage) / target_percentage
+                    else:
+                        GR_percentage = None
+                except ZeroDivisionError,e :
+                    GR_percentage = 0
+                try:
+                    target_service['hot_spot'][_]['GR'] = round(GR_percentage * 100, 2)
+                except TypeError, e:
+                    # hot spot exist in baseline, while not found in target service
+                    # keep this element is None
+                    pass
+            # calcu response time GR
+            try:
+                if target_service['response_time'] and baseline_service['response_time']:
+                    GR_response_time = (target_service['response_time'] - baseline_service['response_time']) / target_service['response_time']
+                else:
+                    GR_response_time = None
+            except ZeroDivisionError,e :
+                GR_response_time = 0
+
+            response_data_service_level.append({
+                'baseline_service' : baseline_service,
+                'target_service' : target_service,
+                'GR_response_time' : round(GR_response_time * 100, 2)
+           })
+        elif baseline_service and not target_service:
+            response_data_service_level.append({
+                'baseline_service' : baseline_service,
+                'target_service' : None,
+                'GR_response_time' : None
+            })
+        else:
+            response_data_service_level.append({
+                'baseline_service' : None,
+                'target_service' : target_service,
+                'GR_response_time' : None
+            })
+            logger.error("compare services error")
+    '''
+        hot spot diagram
+    '''
+    top_10_hot_spot = response_data_function_level[:10]
     return render_to_response('record_comparison.html', locals())
+
 def edit_profile(request):
     if request.method == "POST":
         logger.info("EDIT PROFILE")
@@ -484,6 +616,10 @@ def edit_profile(request):
         first_name = user.first_name
         last_name = user.last_name
     return render_to_response("user.html", locals())
+# not in use now
+def get_password(request):
+    return render_to_response("get_password.html", locals())
+
 def error(requset, type):
     if type == '400':
         return render_to_response("errors_no_file.html", locals())
@@ -491,6 +627,8 @@ def error(requset, type):
         return render_to_response("errors_500.html", locals())
     elif type == '401':
         return render_to_response("errors_file_invalid.html", locals())
+    elif type == "comparison_error":
+        return render_to_response("errors_comparison.html", locals())
     else:
         return render_to_response("errors_403.html",locals())
 
@@ -554,6 +692,7 @@ def restore_record(username):
         return record
 
 def shorten_function_name(rank_list):
+    shorten_function_name_list = []
     for function_item in rank_list:
         function_name = function_item[0]
         if len(function_name) > 70:
@@ -563,9 +702,11 @@ def shorten_function_name(rank_list):
             lst[3] = "*"
             lst[4] = "*"
             function_item.append(('.').join(lst))
+            shorten_function_name_list.append(('.').join(lst))
         else:
             function_item.append(function_name)
-    return rank_list
+            shorten_function_name_list.append(function_name)
+    return shorten_function_name_list
 def shorten_function_name_by_method_name(method_name):
     if len(method_name) > 70:
         lst = method_name.split(".")
@@ -576,16 +717,112 @@ def shorten_function_name_by_method_name(method_name):
         return ('.').join(lst)
     return method_name
 
+def format_service_name(service_name):
+    """format service name
+    Args:
+        1)service_name : the service's name which need formatted
+
+    Returns:
+        1)formatted_service_name: an tuple contain the entity name and relavant pararmeters in service's name
+    Raises:
+        None
+    """
+    SEPERATE_CHAR = '['
+    seperate_position = service_name.find('[')
+    return (service_name[:seperate_position], service_name[seperate_position:])
+'''
+    @parameters
+        1) rank_list : record['rank_list']
+        2) method_name : specific method name
+    @return
+        1) score : relevant function score
+'''
 def get_function_score(rank_list, method_name):
     for function in rank_list:
         if function[0] == method_name:
             return function[1]['score']
-def get_all_function_score(rank_list, method_name_list):
-    logger.info(method_name_list)
-    all_score = []
-    for method in method_name_list:
-        all_score.append(get_function_score(rank_list, method[0]))
-    return all_score
+    return None
+
+'''
+    @parameters
+        1) rank_list : record['rank_list']
+        2) method_name : specific method name
+    @return
+        1) response time : relevant function response time
+
+'''
+def get_function_avg_response_time(rank_list, method_name):
+    for function in rank_list:
+        if function[0] == method_name:
+            return function[1]['avg']
+    return None
+
+def get_all_function_info(rank_list, target_function_list):
+    all_scores = []
+    all_response_time = []
+    for function_item in target_function_list:
+        all_scores.append(get_function_score(rank_list, function_item[0]))
+        all_response_time.append(get_function_avg_response_time(rank_list, function_item[0]))
+    return all_scores, all_response_time
+
+'''
+    @parameters
+        1) services : search services list
+        2) service_name : specific service's name
+    @return(if found, otherwise return None)
+        1) return service object
+'''
+def find_service(services, service_name):
+    for service in services:
+        if service['serviceId'] == service_name:
+            return service
+    return None
+'''
+    @parameters
+        1) service : search service object
+        2) hot_spot_name : specific hot_spot's name
+    @return(if found, otherwise return None)
+        1) return hot_spot object
+'''
+def find_hot_spot(service, hot_spot_name):
+    for hot_spot in service['hot_spot']:
+        if hot_spot['method_name'] == hot_spot_name:
+            return hot_spot
+    return None
+
+
+def get_all_service_info(search_services, target_services):
+    '''
+        @parameters
+            1) search_services :
+            2) target_services :
+        @return
+            1) all services info and relavant hot spot method_name and percentage in service
+    '''
+    all_services_hot_spots = []
+    for service in target_services:
+        search_service = find_service(search_services, service['serviceId'])
+        if search_service:
+            # begin to find hot spot
+            hot_spots = []
+            for hot_spot in service['hot_spot']:
+                search_hot_spot = find_hot_spot(search_service, hot_spot['method_name'])
+                if search_hot_spot:
+                    hot_spots.append({
+                        'method_name' : shorten_function_name_by_method_name(search_hot_spot['method_name']),
+                        'percentage' : round(search_hot_spot['percentage'] * 100, 2)
+                    })
+                else:
+                    hot_spots.append(None)
+            all_services_hot_spots.append({
+                'service' : format_service_name(service['serviceId']),
+                'response_time' : round(search_service['avg'], 2),
+                'hot_spot' : hot_spots
+            })
+        else:
+            # not found
+            all_services_hot_spots.append(None)
+    return all_services_hot_spots
 
 def datetime_less(datetime_1, datetime_2):
     '''
@@ -650,7 +887,20 @@ def get_lastest_date(date_list):
             if datetime_less(lastest_date, date):
                 position = index
                 lastest_date = date
-    return position
+    return
+
+'''
+    @para : record_list
+    @return : target_record, compare_record, target_position
+'''
+def get_target_record(record_contents):
+    if datetime_less(record_contents[0]['date'], record_contents[1]['date']):
+        position = 1
+        position_compare = 0
+    else:
+        position = 0
+        position_compare = 1
+    return record_contents[position], record_contents[position_compare], position
 def is_min_element_of_array(position, array):
     check_elem = array[position]
     for elem in array:

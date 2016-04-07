@@ -20,13 +20,15 @@ logger = logging.getLogger("data generator")
 input_file = ""
 output_file = ""
 delta = 0.0
+loop_count = 1
 
 
 class Generator(object):
-    def __init__(self, input_file, output_file, delta):
+    def __init__(self, input_file, output_file, delta, loop_count):
         self.input_file = input_file
         self.output_file = output_file
         self.delta = delta
+        self.loop_count = loop_count
         # to store whole elapsed time for each method
         self.remain_time_stack = []
         self.method_position_stack = []
@@ -35,8 +37,20 @@ class Generator(object):
             self.f_output = open(output_file, 'w+')
         except Exception, e:
             logger.error(e)
-
     def process(self):
+        count = 0
+        while count < self.loop_count:
+            self.generate_output_file_single_loop()
+            count += 1
+        self.close_all_file()
+
+    def close_all_file(self):
+        self.f_input.close()
+        self.f_output.close()
+
+    def generate_output_file_single_loop(self):
+        # move cursor to the begin of file
+        self.f_input.seek(0)
         while True:
             line = self.f_input.readline()
             if line:
@@ -81,8 +95,6 @@ class Generator(object):
                     self.f_output.write(output_line)
 
             else:
-                self.f_input.close()
-                self.f_output.close()
                 break
     @staticmethod
     def is_begin_log_entry(line):
@@ -97,34 +109,40 @@ class Generator(object):
         return False
 
     def get_new_elapsed_time(self, elapsed_time, remain = None):
+        """ generate a random elapse time
+            in the range of [orgin_elapsed * (1 - delta), orgin_elapsed * (1 + delta)]
+        Args:
+            1) self: class instance
+            2) elasped_time: original elapsed time
+            3) remain: the max left time to assign
+        Returns:
+            1) new elapsed time
+        Raises:
+        """
         delta = self.delta
         bottom_limitation = int(elapsed_time * (1 - delta)) + 1
         if remain:
             top_limitation = min(remain, int(elapsed_time * (1 + delta)) - 1)
         else:
             top_limitation = int(elapsed_time * (1 + delta)) -1
-        '''
-        logger.info("elapsed_time")
-        logger.info(elapsed_time)
-        logger.info("delta")
-        logger.info(delta)
-        logger.info("bottom_limitation")
-        logger.info(bottom_limitation)
-        logger.info("top_limitation")
-        logger.info(top_limitation)
-        '''
         if top_limitation < 0:
             return 0
         if bottom_limitation > top_limitation:
             bottom_limitation = top_limitation / 2
         new_elapsed_time = randint(bottom_limitation, top_limitation)
         return new_elapsed_time
+def print_usage():
+    print ("usage: python data_generator\n"
+            "--input_file <input file with specific path>\n"
+            "--output_file <output file with specific path>\n"
+            "--delta <delta>\n"
+            "--count <generator loop>\n"
+          )
 
 if __name__ == "__main__":
-
     num_argv = len(sys.argv)
-    if num_argv - 1 != 6:
-        logger.error("invalid argv")
+    if num_argv - 1 < 6:
+        print_usage()
         sys.exit()
     index = 1
     while index < len(sys.argv):
@@ -139,14 +157,23 @@ if __name__ == "__main__":
             elif options == "delta":
                 delta = float(sys.argv[index+1])
                 index += 2
+            elif options == "count":
+                loop_count = int(sys.argv[index+1])
+                index += 2
             else:
                 logger.error("invalid argv")
                 sys.exit()
     try:
         f = open(input_file, 'r')
         f = open(output_file, 'w')
+        logger.info("input file: %s\n \
+                    output file: %s\n \
+                    delta %f \n \
+                    count %d\n \
+                    " % (input_file, output_file, delta, loop_count))
     except Exception, e:
         logger.error(e)
+        sys.exit()
     # init generator
-    generator = Generator(input_file, output_file, delta)
+    generator = Generator(input_file, output_file, delta, loop_count)
     generator.process()

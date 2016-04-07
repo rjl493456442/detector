@@ -250,3 +250,7 @@
   margin-left: 0;
 }
 
+#hotspot_comparison_div {
+  width: 100%;
+  height: 500px;
+}

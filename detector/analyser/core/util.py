@@ -221,6 +221,7 @@ class Tree(object):
         finally:
             f.close()
     def get_hotspot(self):
+        find_in_ret_list = False
         ret = []
         try:
             if self.hot_spot is not None:
@@ -228,11 +229,19 @@ class Tree(object):
             nodes = self.root.traverse()
             hot_spot = sorted(nodes, lambda x,y : cmp(x.percentageRoot, y.percentageRoot), reverse = True)
             for spot in hot_spot:
+                # reset flag
+                find_in_ret_list = False
                 if spot.percentageRoot > 0.1 :
-                    ret.append({'method_name' : spot.methodName, 'percentage': spot.percentageRoot})
+                    for _spot in ret:
+                        if _spot['method_name'] == spot.methodName:
+                            _spot['percentage'] += spot.percentageRoot
+                            find_in_ret_list = True
+                    # not found in ret list
+                    if find_in_ret_list is False:
+                        ret.append({'method_name' : spot.methodName, 'percentage': spot.percentageRoot})
             self.hot_spot = ret
         except Exception, e:
-            print e
+            logger.error(e)
         return ret
     def save_occur_time(self, username, datetime_str):
         date_table = DateTimeHashTable()

@@ -37,5 +37,6 @@ urlpatterns = [
     url(r'^comparison_result/$', views.comparison_result),
     url(r'^history/$', views.show_history),
     url(r'^profile/$', views.edit_profile),
+    url(r'^get_password/$', views.get_password),
     url(r'^record/(?P<id>.*)/$', views.record_detail),
 ]

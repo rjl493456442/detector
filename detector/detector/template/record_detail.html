@@ -223,16 +223,26 @@
                             <th data-field="avg" data-sortable="true">Avg Time(ms)</th>
                             <th data-field="count" data-sortable="true">Count</th>
                             <th data-field="score" data-sortable="true">Score</th>
+                            <th data-field="actions" data-events="operateEvents1">Actions</th>
+                            <th data-field="function_full_name" data-visible="false"></th>
+                            <th data-field="date" data-visible="false"></th>
                         </thead>
                         <tbody>
                             {%for itm in rank_lst%}
-                            <tr class = "clickable-row" data-href = "/function/{{itm.0}}/">
+                            <tr>
                                 <td>{{itm.2}}</td>
                                 <td>{{itm.1.max}}</td>
                                 <td>{{itm.1.min}}</td>
                                 <td>{{itm.1.avg}}</td>
                                 <td>{{itm.1.cnt}}</td>
                                 <td>{{itm.1.score}}</td>
+                                <td>
+                                    <a rel="tooltip" title="Edit" class="table-action edit" href="javascript:void(0)" title="Edit">
+                                    <i class="fa fa-edit"></i>
+                                    </a>
+                                </td>
+                                <td>{{itm.0}}</td>
+                                <td>{{date}}</td>
                             </tr> 
                             {%endfor%}
                         </tbody>
@@ -257,47 +267,35 @@
                             <th data-field="min" data-sortable="true">Min Time(ms)</th>
                             <th data-field="avg" data-sortable="true">Avg Time(ms)</th>
                             <th data-field="count" data-sortable="true">Count</th>
+                            <th data-field="actions" data-events="operateEvents2">Actions</th>
+                            <th data-field="date" data-visible="false"></th>
                         </thead>
                         <tbody>
                             {%for itm in services%}
-                            <tr class = "clickable-row" data-href = "/services/{{itm.serviceId}}/">
+                            <tr>
                                 <td>{{itm.serviceId}}</td>
                                 <td>{{itm.max}}</td>
                                 <td>{{itm.min}}</td>
                                 <td>{{itm.avg}}</td>
                                 <td>{{itm.cnt}}</td>
+                                <td>
+                                    <a rel="tooltip" title="Edit" class="table-action edit" href="javascript:void(0)" title="Edit">
+                                    <i class="fa fa-edit"></i>
+                                    </a>
+                                </td>
+                                <td>{{date}}</td>
                             </tr> 
                             {%endfor%}
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <!--services statistic end-->               
+                <!--services statistic end-->             
             </div>
         </div>
     </div>
 </div>
-<!-- Modal -->
-<div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="myModal" class="modal fade">
-  <div class="modal-dialog">
-      <div class="modal-content">
-          <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-              <h4 class="modal-title">Forgot Password ?</h4>
-          </div>
-          <div class="modal-body">
-              <p>Enter your e-mail address below to reset your password.</p>
-              <input type="text" name="email" placeholder="Email" autocomplete="off" class="form-control placeholder-no-fix">
 
-          </div>
-          <div class="modal-footer">
-              <button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
-              <button class="btn btn-theme" type="button"><a href = "/login/">Submit</a></button>
-          </div>
-      </div>
-  </div>
-</div>
-<!-- modal -->
 
 
 <div id="divLoading"></div>
@@ -316,14 +314,6 @@
 
     <script type="text/javascript" src="/static/assets_table/js/bootstrap.js"></script>
     <script type="text/javascript" src="/static/assets_table/js/bootstrap-table.js"></script>
-
-    <!-- export plugin js>
-    <script type="text/javascript" src="/static/table_export_plugin/libs/FileSaver/FileSaver.min.js"></script>
-    <script type="text/javascript" src="/static/table_export_plugin/libs/jsPDF/jspdf.min.js"></script>
-    <script type="text/javascript" src="/static/table_export_plugin/libs/jsPDF-AutoTable/jspdf.plugin.autotable.js"></script>
-    <script type="text/javascript" src="/static/table_export_plugin/libs/html2canvas/html2canvas.min.js"></script>
-    <script type="text/javascript" src="/static/table_export_plugin/tableExport.min.js"></script>
-    <-->
 
     <script src="/static/assets_V3/js/amcharts.js"></script>
     <script src="/static/assets_V3/js/serial.js"></script>
@@ -401,6 +391,34 @@
                 $table.bootstrapTable('resetView');
             });
         });
+        
+        window.operateEvents1 = {                
+                'click .edit': function (e, value, row, index) {
+                    var url = "/record/function/" + row['function_full_name'] + "/" + row['date'];
+                    window.document.location = url;
+                },
+        };
+        window.operateEvents2 = {                
+                'click .edit': function (e, value, row, index) {
+                    var url = "/record/services/" + row['name'] + "/" + row['date'];
+                    window.document.location = url;
+                },
+        };
+        function operateFormatter1(value, row, index) {
+            return [
+                '<a rel="tooltip" title="Edit" class="table-action edit" href="javascript:void(0)" title="Edit">',
+                    '<i class="fa fa-edit"></i>',
+                '</a>',
+            ].join('');
+        };
+        function operateFormatter2(value, row, index) {
+            return [
+                '<a rel="tooltip" title="Edit" class="table-action edit" href="javascript:void(0)" title="Edit">',
+                    '<i class="fa fa-edit"></i>',
+                '</a>',
+            ].join('');
+        };
+
     </script>
     <script>
             var chart;
@@ -421,9 +439,6 @@
                 chart.marginLeft = 10;
                 chart.categoryField = "year";
                 chart.dataDateFormat = "JJ:NN";
-
-                // listen for "dataUpdated" event (fired when chart is inited) and call zoomChart method when it happens
-                //chart.addListener("dataUpdated", zoomChart);
 
                 // AXES
                 // category

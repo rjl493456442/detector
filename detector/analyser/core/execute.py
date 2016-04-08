@@ -60,7 +60,6 @@ class logProfiler(object):
         # all score to final tree and convert tree to json format
         self.addScoreTagAndToJson(username, datetime_str)
         self.addScoreTagAndToJson(username, "temp")
-
         # save execute info to file
 
         logger.info("total time elapsed" + str(time.clock() - begin))

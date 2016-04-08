@@ -23,10 +23,9 @@ from django.contrib import auth
 from django.contrib.auth import logout
 from core.util import HistroyRecord
 import shutil
-# Create your views here.
 
 logging.basicConfig(level = logging.DEBUG,
-                    format = '%(asctime)s %(name)s %(levelname)s %(message)s',
+                    format ='%(asctime)s %(name)s %(levelname)s %(module)s:%(lineno)s %(message)s',
                     datefmt='%a, %d %b %Y %H:%M:%S',
                    )
 logger = logging.getLogger("network")
@@ -216,6 +215,10 @@ def execute(request):
 
 @login_required
 def show_result(request):
+    """ show a analysis result
+        this function called only when a analysis finished
+        user view a histroy record via record_detail function
+    """
     if hasattr(request, 'session') and request.session.session_key:
         try:
             record = restore_record(request.user.username)
@@ -248,6 +251,9 @@ def show_result(request):
     else:
         return render_to_response("errors_500.html", locals())
 def show_history(request):
+    """ gather all history record from the user directory
+        get detail information for a specific record from ${USER}/${DATE}/record.json file
+    """
     username = request.user.username
     repostory = os.path.join(settings.JSON_ROOT, username)
     if os.path.exists(repostory):
@@ -272,10 +278,21 @@ def show_history(request):
                 )
     return render_to_response("history.html", locals())
 
-def service_detail(request, id):
+def service_detail(request, id, date = None):
+    """ show service analysis result
+    Args:
+        1) id: service full name
+        2) date: if exists, to specify a history record data (always call after analysis finish)
+                 otherwise, use the temp directory (always call when user view a history record)
+    """
     if hasattr(request, 'session') and request.session.session_key:
+        if date:
+            path_part = date
+        else:
+            path_part = "temp"
         # get service info from temp directory
-        file_name = request.user.username + "/temp/" + id + '.json'
+        # file_name: path to zoom pack diagram data, used when html render
+        file_name = request.user.username + "/" + path_part + "/" + id + '.json'
         path = "/static/assets/data/" + file_name
         record = restore_record(request.user.username)
         services = record['services']
@@ -284,7 +301,7 @@ def service_detail(request, id):
                 service = i
                 break
         # get throughput from json file
-        throughput_file = os.path.join(settings.JSON_ROOT, request.user.username) + "/temp/" + id + "_date.json"
+        throughput_file = os.path.join(settings.JSON_ROOT, request.user.username) + "/" + path_part + "/" + id + "_date.json"
         try:
             with open(throughput_file, "r") as f:
                 all_date = json.load(f)
@@ -295,7 +312,7 @@ def service_detail(request, id):
         except Exception,e:
             logger.error(e)
         # get response time from json file
-        response_time_file = os.path.join(settings.JSON_ROOT, request.user.username) + "/temp/" + id + "_response.json"
+        response_time_file = os.path.join(settings.JSON_ROOT, request.user.username) + "/" + path_part + "/" + id + "_response.json"
         try:
             with open(response_time_file, "r") as f:
                 all_response_time = json.load(f)
@@ -306,9 +323,20 @@ def service_detail(request, id):
         return render_to_response("service_detail.html", locals())
 
 @login_required
-def function_detail(request, id):
+def function_detail(request, id, date = None):
+    """ show function analysis result
+    Args:
+        1) id: function full name
+        2) date: if exists, to specify a history record data (always call after analysis finish)
+                 otherwise, use the temp directory (always call when user view a history record)
+    """
+
+    if date:
+        path_part = date
+    else:
+        path_part = "temp"
     # get function related data
-    record_file = os.path.join(settings.JSON_ROOT, request.user.username) + "/temp/record.json"
+    record_file = os.path.join(settings.JSON_ROOT, request.user.username) + "/" + path_part + "/record.json"
     try:
         with open(record_file) as f:
             record = json.load(f)
@@ -332,11 +360,17 @@ def function_detail(request, id):
             for service_name, percentage in related_services.items():
                 related_services_list.append({
                     'name' : service_name,
-                    'percentage' : percentage * 100,
+                    'percentage' : round(percentage[0] * 100, 2),
+                    # TODO
+                    # simple use the first percentageChildren, ignore the other
+                    'child_percentage' : round(percentage[1][0] * 100, 2),
                     'id' : count_id
                 })
                 count_id += 1
+            # sort related_services_list depand on percentage relative to root
+            related_services_list.sort(key = lambda x: x['percentage'], reverse = True)
             info['related_services'] = related_services_list
+            top_10_related_services_list = related_services_list[:10]
             return render_to_response("function_detail.html", locals())
         else:
             return HttpResponseRedirect("/error/500/")
@@ -345,6 +379,10 @@ def function_detail(request, id):
         return HttpResponseRedirect("/error/500/")
 @login_required
 def record_detail(request, id):
+    """ to show a history record detail
+    Args:
+        1) id : to specify the date of the record
+    """
     date = id
     username = request.user.username
     file_path = os.path.join(settings.JSON_ROOT, username) + '/' + date + "/record.json"
@@ -372,7 +410,7 @@ def record_detail(request, id):
                     "value":item['value']
                 }
             )
-        return render_to_response("result.html", locals())
+        return render_to_response("record_detail.html", locals())
     except Exception, e:
         logger.error(e)
         return HttpResponseRedirect('/error/500/')
@@ -508,13 +546,21 @@ def comparison_result(request):
         # calcu GR
         try:
             GR_score = (target_score - baseline_score) / target_score
-        except ZeroDivisionError,e :
+        except ZeroDivisionError, e:
             GR_score = 0
+        except TypeError, e:
+            GR_score = None
         try:
             GR_response_time = (target_avg_response_time - baseline_avg_response_time) / target_avg_response_time
-        except ZeroDivisionError,e :
+        except ZeroDivisionError, e:
             GR_response_time = 0
+        except TypeError, e:
+            GR_response_time = None
 
+        if GR_score:
+            GR_score = round(GR_score * 100, 2)
+        if GR_response_time:
+            GR_response_time = round(GR_response_time * 100, 2)
         function_name = entry
         response_data_function_level.append({
             'function_name' : function_name,
@@ -522,8 +568,8 @@ def comparison_result(request):
             'target_score' : target_score,
             'baseline_response_time' : baseline_avg_response_time,
             'target_response_time' : target_avg_response_time,
-            'GR_score' : round(GR_score * 100, 2),
-            'GR_response_time' : round(GR_response_time * 100, 2),
+            'GR_score' : GR_score,
+            'GR_response_time' : GR_response_time,
             'status' : status
         })
     '''

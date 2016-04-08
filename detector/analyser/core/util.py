@@ -26,6 +26,7 @@ class Node:
         self.maxTime = info['execute_time']
         self.minTime = info['execute_time']
         self.avgTime = info['execute_time']
+        self.percentageChildren = 0
         self.cnt = 1
         self.score = None
     @property
@@ -93,6 +94,7 @@ class Node:
         for child in self.children:
             child_total = child_total + child.executeTime
         self.percentageRoot = 1.0 * (self.executeTime  - child_total ) / total
+        self.percentageChildren = 1.0 * child_total / self.executeTime
         self.avgTime = 1.0 * (self.executeTime - child_total) / self.cnt
         try:
             self.percentageFather = 1.0 * self.executeTime / (self.father.executeTime)
@@ -101,9 +103,15 @@ class Node:
         for child in self.children:
             child.calcuAvg(total)
     def calcuPercentage(self, total):
+        """ calcu percentage
+        Args:
+            1) total: service total execution time. and that is root node execution time
+        """
         self.percentageRoot = 1.0 * self.executeTime  / total
+        child_exection_total = 0
         for child in self.children:
             child.calcuPercentage(total)
+            child_exection_total += child.executeTime
     def __repr__(self):
         str = '  ' * self.depth + "<%s-%s-%s-[root:%s]-[father:%s]-[max:%s]-[min:%s]-[avg:%s]-[score:%s]>\n" % (self.position, self.methodName, self.executeTime, self.percentageRoot, self.percentageFather, self.maxTime, self.minTime, self.avgTime, self.score)
         for child in self.children:
@@ -111,6 +119,14 @@ class Node:
             str = str + child.__repr__()
         return str
     def traverse(self, methodLst = None):
+        """ traverse the entire tree from the root node
+        Args:
+            1) methodLst: ranked method list contain mapping between function and web service
+        Returns:
+            1) if methodLst not exists, return all node of the tree
+            2) if methodLst exists, return all node information contains name, score, avg execution time, percentage
+        Raises:
+        """
         getJsonAndScore = False
         if methodLst is not None:
             getJsonAndScore = True
@@ -122,6 +138,9 @@ class Node:
                     break
             jsonVal['name'] = self.methodName
             jsonVal['score'] = self.score
+            jsonVal['avg'] = round(self.avgTime, 2)
+            jsonVal['percentage'] = round(self.percentageRoot * 100, 2)
+            jsonVal['percentageChildren'] = round(self.percentageChildren * 100, 2)
             if len(self.children) > 0:
                 jsonVal['children'] = []
         nodes = []
@@ -204,6 +223,17 @@ class Tree(object):
     def traverse(self):
         return self.root.traverse()
     def addScoreTagAndToJson(self, methodLst, username, datetime):
+        """ 1)calcu score for each node belong to tree
+            2)save in json format
+        Args:
+            1)methodLst: list contains mapping between function and web service which from inverted index
+            2)username: use to specify the user directory
+            3)datetime: if exists, save to the relavant date directory which belong to the user
+                        otherwise, save to temp directory
+
+        Important:
+            this function only called by final tree(which means all merge works has done)
+        """
         user_directory = os.path.join(settings.JSON_ROOT, username)
         if not os.path.exists(user_directory):
             os.makedirs(user_directory)
@@ -279,27 +309,37 @@ class InvertedIndex:
     def __contains__(self, methodNode):
         return methodNode.methodName in self.__table.keys()
     def insert(self, methodNode, service):
-        if methodNode in self:
-            services = self.__table[methodNode.methodName]['services']
-            if service in services.keys():
-                services[service] = services[service] + methodNode.percentageRoot
+        try:
+            if methodNode in self:
+                services = self.__table[methodNode.methodName]['services']
+                if service in services.keys():
+                    # update percentageRoot
+                    services[service][0] = services[service][0] + methodNode.percentageRoot
+                    # update percentageChildren
+                    if services[service][1] is None:
+                        services[service][1] = [methodNode.percentageChildren]
+                    else:
+                        services[service][1].append(methodNode.percentageChildren)
+                else:
+                    services[service] = [methodNode.percentageRoot, [methodNode.percentageChildren]]
+                if self.__table[methodNode.methodName]['max'] < methodNode.maxTime :
+                    self.__table[methodNode.methodName]['max'] = float("%0.2f" % methodNode.maxTime)
+                if self.__table[methodNode.methodName]['min'] > methodNode.minTime:
+                    self.__table[methodNode.methodName]['min'] = float("%0.2f" % methodNode.minTime)
+                avg = ( self.__table[methodNode.methodName]['avg'] * self.__table[methodNode.methodName]['cnt'] + methodNode.executeTime) * 1.0  / (self.__table[methodNode.methodName]['cnt'] + methodNode.cnt)
+                self.__table[methodNode.methodName]['avg'] = float("%0.2f" % avg)
+                self.__table[methodNode.methodName]['cnt'] = self.__table[methodNode.methodName]['cnt'] + methodNode.cnt
             else:
-                services[service] = methodNode.percentageRoot
-            if self.__table[methodNode.methodName]['max'] < methodNode.maxTime :
-                self.__table[methodNode.methodName]['max'] = float("%0.2f" % methodNode.maxTime)
-            if self.__table[methodNode.methodName]['min'] > methodNode.minTime:
-                self.__table[methodNode.methodName]['min'] = float("%0.2f" % methodNode.minTime)
-            avg = ( self.__table[methodNode.methodName]['avg'] * self.__table[methodNode.methodName]['cnt'] + methodNode.executeTime) * 1.0  / (self.__table[methodNode.methodName]['cnt'] + methodNode.cnt)
-            self.__table[methodNode.methodName]['avg'] = float("%0.2f" % avg)
-            self.__table[methodNode.methodName]['cnt'] = self.__table[methodNode.methodName]['cnt'] + methodNode.cnt
-        else:
-            services = {service : methodNode.percentageRoot}
-            self.__table[methodNode.methodName] = {}
-            self.__table[methodNode.methodName]['services'] = services
-            self.__table[methodNode.methodName]['max'] =  float("%0.2f" % methodNode.maxTime)
-            self.__table[methodNode.methodName]['min'] =  float("%0.2f" % methodNode.minTime)
-            self.__table[methodNode.methodName]['avg'] =  float("%0.2f" % methodNode.avgTime)
-            self.__table[methodNode.methodName]['cnt'] =  methodNode.cnt
+                service_info = [methodNode.percentageRoot, [methodNode.percentageChildren]]
+                services = {service : service_info}
+                self.__table[methodNode.methodName] = {}
+                self.__table[methodNode.methodName]['services'] = services
+                self.__table[methodNode.methodName]['max'] =  float("%0.2f" % methodNode.maxTime)
+                self.__table[methodNode.methodName]['min'] =  float("%0.2f" % methodNode.minTime)
+                self.__table[methodNode.methodName]['avg'] =  float("%0.2f" % methodNode.avgTime)
+                self.__table[methodNode.methodName]['cnt'] =  methodNode.cnt
+        except Exception,e:
+            logger.error(e)
 
     def __getitem__(self, attribute):
         return self.__table[attribute]
@@ -309,13 +349,13 @@ class InvertedIndex:
             avg = 0
             services = methodinfo['services']
             for i,j in services.items():
-                sum = sum + j ** 2
-                avg = avg + j
+                sum = sum + j[0] ** 2
+                avg = avg + j[0]
             R = math.sqrt(sum * 1.0 / len(services.keys()))
             avg = avg * 1.0 / len(services.keys())
             stdSum = 0
             for i,j in services.items():
-                stdSum = stdSum + (j - avg) ** 2
+                stdSum = stdSum + (j[0] - avg) ** 2
             std = math.sqrt(stdSum * 1.0 / len(services.keys()))
             score = R - std
             self[method]['score'] = float('%0.3f' % score)

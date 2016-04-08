@@ -26,9 +26,10 @@
     <link href="/static/assets_V3/css/demo.css" rel="stylesheet" />
 
     <!-- table-->
+
     <link href="/static/assets_table/css/fresh-bootstrap-table.css" rel="stylesheet" />
     <!--     Fonts and icons     -->
-    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/static/assets_V3/css/max.css">
     <link href='http://fonts.googleapis.com/css?family=Roboto:400,700,300' rel='stylesheet' type='text/css'>
     <link href="/static/assets_V3/css/pe-icon-7-stroke.css" rel="stylesheet" />
 
@@ -192,12 +193,13 @@
                                             <span data-notify="icon" class="pe-7s-wristwatch"></span>
                                             <span data-notify="message">Average Execution Time: {{info.method_avg}}(ms)</span>
                                         </div>
+
                                     </div>
                                     <div class="col-md-4">
                                         <h5>Analysis Conclusion</h5>
                                         <div class="alert alert-info alert-with-icon">
                                             <span data-notify="icon" class="pe-7s-loop"></span>
-                                            <span data-notify="message">Totally Execute Count: {{info.method_cnt}}</span>
+                                            <span data-notify="message">Analysis Score: {{info.method_score}}</span>
                                         </div>
                                         <div class="alert alert-success alert-with-icon">
                                             <span data-notify="icon" class="pe-7s-timer"></span>
@@ -205,36 +207,71 @@
                                         </div>
                                     </div>
                                 </div>
-                                <br>
-                                <br>
+                            </div>
+                        </div>
+                    </div>  
+
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="content">
                                 <!-- Services Related Data -->
                                 <div class = "row">
                                     <div class="header">
-                                        <h4 class="title">Related Business Services</h4>
+                                        <h4 class="title">Related Web Services</h4>
                                     </div>
-                                    <div class="content table-responsive table-full-width">
-                                        <table class="table table-hover table-striped">
+                                    <div class="toolbar">
+                                        <button id="alertBtn" class="btn btn-default" onclick = "gather_record_info()">Benchmarking Records Comparison</button>
+                                    </div>
+                                    <div class = "fresh-table">
+                                        <table id="fresh-table" class="table">
                                             <thead>
-                                                <th>ID</th>
-                                                <th>Business Services Name</th>
-                                                <th>Method Execution Time Percentage</th>
+                                                <th data-field="id" data-sortable="true">ID</th>
+                                                <th data-field="service_name" data-sortable="true">Web Services Name</th>
+                                                <th data-field="self_percentage" data-sortable="true">Method Execution Time Percentage</th>
+                                                <th data-field="children_percentage" data-sortable="true">Children Execution Percentage</th>
+                                                <th data-field="actions"data-events="operateEvents">Actions</th>
                                             </thead>
                                             <tbody>
-                                                {%for itm in info.related_services%}
-                                                <tr class = "clickable-row" data-href = "/services/{{itm.name}}/">
+                                                {% for itm in info.related_services%}
+                                                <tr>
                                                     <td>{{itm.id}}</td>
                                                     <td>{{itm.name}}</td>
-                                                    <td>{{itm.percentage}}%</td>   
+                                                    <td>{{itm.percentage}}%</td>
+                                                    <td>{{itm.child_percentage}}%</td>
+                                                    <td>
+                                                        <a rel="tooltip" title="Edit" class="table-action edit" href="javascript:void(0)" title="Edit">
+                                                        <i class="fa fa-edit"></i>
+                                                        </a>
+                                                    </td>
                                                 </tr>
-                                                {%endfor%}
-                                            </tbody>
+                                                {% endfor %}
+                                                </tbody>
                                         </table>
                                     </div>
                                 </div>
+                                <!-- services realated data-->
                             </div>
                         </div>
                     </div>
-                </div>
+
+                    <!-- related web services diagram-->
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="content">
+                                <!-- Services Related Data -->
+                                <div class = "row">
+                                    <div class="header">
+                                        <h4 class="title">Diagram</h4>
+                                    </div>
+                                    <div id = "services_diagram"></div>
+                                </div>
+                                <!-- services realated data-->
+                            </div>
+                        </div>
+                    </div>
+
+
+
             </div>
             <hr>
         </div>
@@ -253,28 +290,136 @@
 
 	<!-- Light Bootstrap Table DEMO methods, don't include it in your project! -->
 	<script src="/static/assets_V3/js/demo.js"></script>
-
+    <!-- bootstrap table -->
     <script type="text/javascript" src="/static/assets_table/js/bootstrap.js"></script>
     <script type="text/javascript" src="/static/assets_table/js/bootstrap-table.js"></script>
-
-    <!-- export plugin js>
-    <script type="text/javascript" src="/static/table_export_plugin/libs/FileSaver/FileSaver.min.js"></script>
-    <script type="text/javascript" src="/static/table_export_plugin/libs/jsPDF/jspdf.min.js"></script>
-    <script type="text/javascript" src="/static/table_export_plugin/libs/jsPDF-AutoTable/jspdf.plugin.autotable.js"></script>
-    <script type="text/javascript" src="/static/table_export_plugin/libs/html2canvas/html2canvas.min.js"></script>
-    <script type="text/javascript" src="/static/table_export_plugin/tableExport.min.js"></script>
-    <-->
 
     <script src="/static/assets_V3/js/amcharts.js"></script>
     <script src="/static/assets_V3/js/serial.js"></script>
     <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
-    <script src="https://www.amcharts.com/lib/3/plugins/export/export.js"></script>
-
     <script type="text/javascript">
-        $(document).ready(function() {
-        $(".clickable-row").click(function() {
-            window.document.location = $(this).data("href");
+        var $table = $('#fresh-table'),
+            full_screen = false;
+        var path_part;
+        if("{{date}}" == "None"){
+            path_part = "temp";
+        }
+        else
+        {
+            path_part = "{{date}}";
+        }
+
+        window.operateEvents = {                
+                'click .edit': function (e, value, row, index) {
+                     var url = "/record/services/" + row['service_name'] + "/" + path_part;
+                    window.document.location = url;
+                },
+                
+            };
+
+
+        $().ready(function(){
+            $table.bootstrapTable({
+                toolbar: ".toolbar",
+                showRefresh: true,
+                search: true,
+                showToggle: true,
+                showColumns: true,
+                pagination: true,
+                striped: true,
+                pageSize: 8,
+                pageList: [8,10,25,50,100],
+
+                formatShowingRows: function(pageFrom, pageTo, totalRows){
+                    //do nothing here, we don't want to show the text "showing x of y from..."
+                },
+                formatRecordsPerPage: function(pageNumber){
+                    return pageNumber + " rows visible";
+                },
+                icons: {
+                    refresh: 'fa fa-refresh',
+                    toggle: 'fa fa-th-list',
+                    columns: 'fa fa-columns',
+                    detailOpen: 'fa fa-plus-circle',
+                    detailClose: 'fa fa-minus-circle'
+                }
+            });
+
+
+            $(window).resize(function () {
+                $table.bootstrapTable('resetView');
+            });
         });
-      });
+
+
+        function operateFormatter(value, row, index) {
+            return [
+                '<a rel="tooltip" title="Edit" class="table-action edit" href="javascript:void(0)" title="Edit">',
+                    '<i class="fa fa-edit"></i>',
+                '</a>',
+            ].join('');
+        }
     </script>
+    <script type="text/javascript">
+        var services_data_provider = [];
+        {%for itm in top_10_related_services_list%}
+            services_data_provider.push({
+                'method_name' : "{{itm.name}}",
+                'self-percentage' : {{itm.percentage}},
+                'child-percentage' : {{itm.child_percentage}}
+            });
+        {%endfor%}
+        var chart_services = AmCharts.makeChart("services_diagram", {
+            "type": "serial",
+            "theme": "light",
+            "categoryField": "method_name",
+            "rotate": true,
+            "startDuration": 1,
+            "categoryAxis": {
+                "gridPosition": "start",
+                "position": "left",
+                "labelsEnabled": false,
+            },
+            "trendLines": [],
+            "graphs": [
+                {
+                    "balloonText": "[[category]] \n  self-percentage:[[value]]%",
+                    "fillAlphas": 0.8,
+                    "id": "AmGraph-1",
+                    "lineAlpha": 0.2,
+                    "title": "Self-Percentage",
+                    "type": "column",
+                    "valueField": "self-percentage"
+                },
+                {
+                    "balloonText": "[[category]]   children-percentage:[[value]]%",
+                    "fillAlphas": 0.8,
+                    "id": "AmGraph-2",
+                    "lineAlpha": 0.2,
+                    "title": "Children-Percentage",
+                    "type": "column",
+                    "valueField": "children-percentage"
+                }
+            ],
+            "guides": [],
+            "valueAxes": [
+                {
+                    "id": "ValueAxis-1",
+                    "position": "top",
+                    "axisAlpha": 0
+                }
+            ],
+            "allLabels": [],
+            "balloon": {
+                "fixedPosition": true,
+                "maxWidth": 350
+            },
+            "titles": [],
+            "dataProvider": services_data_provider,
+        });
+
+    </script>
+
+
+
 </html>

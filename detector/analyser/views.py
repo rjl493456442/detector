@@ -1024,10 +1024,6 @@ def compare_method_recursively(target_service, baseline_service):
     baseline_percentage = baseline_service['percentage']
     target_avg = target_service['avg']
     baseline_avg = baseline_service['avg']
-    print "target_percentage ", target_percentage
-    print "baseline_percentage ", baseline_percentage
-    print "target_avg ", target_avg
-    print "baseline_avg ", baseline_avg
     # percentage
     try:
         if target_percentage == baseline_percentage:
@@ -1036,7 +1032,6 @@ def compare_method_recursively(target_service, baseline_service):
             target_percentage_gr =  1.0 * (target_percentage - baseline_percentage) / target_percentage
         # save to target_service
         delta_percentage = target_percentage - baseline_percentage
-        print "delta_percentage ", delta_percentage
         target_service['percentage_gr'] = round(target_percentage_gr * 100, 2)
         target_service['percentage_delta'] = round(delta_percentage, 2)
     except Exception, e:
@@ -1050,7 +1045,6 @@ def compare_method_recursively(target_service, baseline_service):
         else:
             target_avg_gr = 1.0 * (target_avg - baseline_avg) / target_avg
         avg_delta = target_avg - baseline_avg
-        print 'avg_delta ', avg_delta
         target_service['avg_gr'] = round(target_avg_gr * 100, 2)
         target_service['avg_delta'] = round(avg_delta, 2)
     except Exception, e:

@@ -31,6 +31,8 @@
     <link rel="stylesheet" type="text/css" href="/static/assets_V3/css/max.css">
     <link href='http://fonts.googleapis.com/css?family=Roboto:400,700,300' rel='stylesheet' type='text/css'>
     <link href="/static/assets_V3/css/pe-icon-7-stroke.css" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="/static/assets_V3/css/scojs.css">
+
 
 </head>
 <body>
@@ -260,6 +262,8 @@
                                     <br/>
                                     (Hot Spot, Response Time)
                                 </th>
+                                <th data-field="actions" data-events="operateEvents2">Actions</th>
+                                <th data-field="service_full_name" data-visible="false"></th>
                             </thead>
                             <tbody>
                                 {%for itm in response_data_service_level%}
@@ -294,14 +298,18 @@
                                         {%endfor%}
                                         ({{itm.GR_response_time}}%)
                                     </td>
+                                    <td>
+                                        <a rel="tooltip" title="Edit" class="table-action edit" href="javascript:void(0)" title="Edit">
+                                        <i class="fa fa-edit"></i>
+                                        </a>
+                                    </td>
+                                    <td>{{itm.target_service.service_full}}</td>
                                 </tr> 
                                 {%endfor%}
                             </tbody>
                         </table>
                         </div>
                     </div>
-                </div> 
-
             </div>
         </div>
     </div>
@@ -325,8 +333,9 @@
     <script src="/static/assets_V3/js/serial.js"></script>
     <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
     <script src="https://www.amcharts.com/lib/3/plugins/export/export.js"></script>
-    <script src="/static/chart/Chart.js"></script>
-    <script src="/static/sco_js/js/sco.modal.js"></script> 
+    <script src="/static/chart/Chart.js"></script> 
+    <script type="text/javascript" src="/static/assets_V2/js/jquery.backstretch.min.js"></script>
+    <script type="text/javascript" src="/static/assets_V3/js/sco.modal.js"></script>
     <script type="text/javascript">
         var $table = $('#fresh-table1'),
             full_screen = false;
@@ -399,6 +408,11 @@
                 $table.bootstrapTable('resetView');
             });
         });
+        window.operateEvents2 = {                
+                'click .edit': function (e, value, row, index) {
+                    window.document.location = "/comparison_service_detail/" + row['service_full_name'] + "/{{target_date}}/{{baseline_date}}/";
+                },
+        };
     </script>
     <script type="text/javascript">
         var dataProvider = [];

@@ -94,6 +94,8 @@ class Reader(object):
                 return None
             # set datetime of request
             self.req_info['datetime'] = datetime_object
+            # set thread name
+            self.req_info['thread_name'] = reqinfo[8]
             # get method name
             line = reqinfo[11]
             if line.find(flag_str) != -1:
@@ -167,11 +169,13 @@ class Reader(object):
             sum = 0
             for m in self.req_info['method_lst']:
                 if len(m['position'].split('.')) == 1:
+                    # the first class children
                     sum = sum + m['execute_time']
-            if sum * 1.0 / total >= float(self.accuracy):
-                return True
-            else:
+            if sum > total:
+                logger.error("all children sum larger than service response time")
                 return False
+            else:
+                return True
         else:
             return False
     def check_datetime_validation(self, datetime):

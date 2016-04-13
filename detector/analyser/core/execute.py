@@ -8,6 +8,7 @@ import time
 import signal
 import os
 from django.conf import settings
+import json
 logging.basicConfig(level = logging.INFO,
                     format = '%(asctime)s %(name)s %(levelname)s %(message)s',
                     datefmt='%a, %d %b %Y %H:%M:%S',
@@ -54,6 +55,7 @@ class logProfiler(object):
         # insert all method to invertedindex
         self.export_request_flow()
         self.export_response_time()
+        self.save_thread_info()
         self.saveToInvertedIndex()
         # calcu score
         self.invertedIndex.calcuScore()
@@ -83,12 +85,15 @@ class logProfiler(object):
                 break
             else:
                 # handle item
-                tree = Tree(item['serviceId'], item['total_time'], item['datetime'])
+                tree = Tree(item['serviceId'], item['total_time'], item['datetime'], item['thread_name'])
                 method_lst = item['method_lst']
                 for method in method_lst:
                    tree.insert(Node(method))
+                # the invalid means there exists some node its children execution time larger than the total time
+                # discard the invalid tree
+                if tree.check_validation() is False:
+                    continue
                 # tree hash
-                tree.check_validation()
                 tree.root.getHash()
                 if item['serviceId'] in self.services.keys():
                     treeLst = self.services[item['serviceId']]
@@ -194,6 +199,36 @@ class logProfiler(object):
         for final_tree in self.final:
             final_tree.save_response_time(self.username, self.datetime_str)
             final_tree.save_response_time(self.username, "temp")
+    def save_thread_info(self):
+        _thread_info = {}
+        for tree in self.final:
+            for elem in tree.thread_info:
+                thread_name = elem['thread_name']
+                if thread_name in _thread_info.keys():
+                    _thread_info[thread_name] += elem['total_time']
+                else:
+                    _thread_info[thread_name] = elem['total_time']
+        user_directory = os.path.join(settings.JSON_ROOT, self.username)
+        if not os.path.exists(user_directory):
+            os.makedirs(user_directory)
+
+        datetime_directory = os.path.join(user_directory, self.datetime_str)
+        temp_directory = os.path.join(user_directory, "temp")
+        # save to record directory
+        if not os.path.exists(datetime_directory):
+            os.makedirs(datetime_directory)
+        # save to temp directory
+        if not os.path.exists(temp_directory):
+            os.makedirs(temp_directory)
+
+        filename = datetime_directory + "/thread.json"
+        try:
+            f = open(filename, "w+")
+            json.dump(_thread_info, f, indent = 2)
+        except Exception, e:
+            logger.error(e)
+        finally:
+            f.close()
 if __name__ == "__main__":
     logprofiler = logProfiler()
     logprofiler.run(None, None)

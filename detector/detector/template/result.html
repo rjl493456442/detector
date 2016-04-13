@@ -223,16 +223,24 @@
                             <th data-field="avg" data-sortable="true">Avg Time(ms)</th>
                             <th data-field="count" data-sortable="true">Count</th>
                             <th data-field="score" data-sortable="true">Score</th>
+                            <th data-field="actions" data-events="operateEvents1">Actions</th>
+                            <th data-field="function_full_name" data-visible="false"></th>
                         </thead>
                         <tbody>
                             {%for itm in rank_lst%}
-                            <tr class = "clickable-row" data-href = "/function/{{itm.0}}/">
+                            <tr>
                                 <td>{{itm.2}}</td>
                                 <td>{{itm.1.max}}</td>
                                 <td>{{itm.1.min}}</td>
                                 <td>{{itm.1.avg}}</td>
                                 <td>{{itm.1.cnt}}</td>
                                 <td>{{itm.1.score}}</td>
+                                <td>
+                                    <a rel="tooltip" title="Edit" class="table-action edit" href="javascript:void(0)" title="Edit">
+                                    <i class="fa fa-edit"></i>
+                                    </a>
+                                </td>
+                                <td>{{itm.0}}</td>
                             </tr> 
                             {%endfor%}
                         </tbody>
@@ -257,22 +265,30 @@
                             <th data-field="min" data-sortable="true">Min Time(ms)</th>
                             <th data-field="avg" data-sortable="true">Avg Time(ms)</th>
                             <th data-field="count" data-sortable="true">Count</th>
+                            <th data-field="actions" data-events="operateEvents2">Actions</th>
                         </thead>
                         <tbody>
                             {%for itm in services%}
-                            <tr class = "clickable-row" data-href = "/services/{{itm.serviceId}}/">
+                            <tr>
                                 <td>{{itm.serviceId}}</td>
                                 <td>{{itm.max}}</td>
                                 <td>{{itm.min}}</td>
                                 <td>{{itm.avg}}</td>
                                 <td>{{itm.cnt}}</td>
+                                <td>
+                                    <a rel="tooltip" title="Edit" class="table-action edit" href="javascript:void(0)" title="Edit">
+                                    <i class="fa fa-edit"></i>
+                                    </a>
+                                </td>
                             </tr> 
                             {%endfor%}
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <!--services statistic end-->               
+                <!--services statistic end-->  
+
+                             
             </div>
         </div>
     </div>
@@ -401,6 +417,18 @@
                 $table.bootstrapTable('resetView');
             });
         });
+        window.operateEvents1 = {                
+                'click .edit': function (e, value, row, index) {
+                    var url = "/function/" + row['function_full_name'];
+                    window.document.location = url;
+                },
+        };
+        window.operateEvents2 = {                
+                'click .edit': function (e, value, row, index) {
+                    var url = "/services/" + row['name'];
+                    window.document.location = url;
+                },
+        };
     </script>
     <script>
             var chart;

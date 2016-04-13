@@ -181,8 +181,8 @@
                                 <th data-field="id">ID</th>
                                 <th data-field="name" data-sortable="true">Name</th>
                                 <th data-field="date" data-sortable="true">Date Time</th>
-                                <th data-field="size" data-sortable="true">Size</th>
-                                <th data-field="elapsed" data-sortable="true">Elapsed Time</th>
+                                <th data-field="size" data-sortable="true">Size(MB)</th>
+                                <th data-field="elapsed" data-sortable="true">Elapsed Time(s)</th>
                                 <th data-field="actions" data-formatter="operateFormatter" data-events="operateEvents">Actions</th>
                             </thead>
                             <tbody>
@@ -358,7 +358,8 @@
         var data = {};
         for(var i = 0; i < all_selections_length; ++i)
         {
-            data[all_selections[i]['name']] = all_selections[i]['date'];
+            data[all_selections[i]['date']] = all_selections[i]['name'];
+            //data[all_selections[i]['name']] = all_selections[i]['date'];
         }
         data['baseline'] = selected_record;
         $.ajax({

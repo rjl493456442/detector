@@ -1,4 +1,4 @@
-function create_circle(path)
+function create_circle(path, is_comparison)
 {
   var margin = 10,
     r = 750,
@@ -14,7 +14,7 @@ function create_circle(path)
   var pack = d3.layout.pack()
       .padding(2)
       .size([r,r])
-      .value(function(d) { return d.score; });
+      .value(function(d) { return d.avg; });
 
   var svg = d3.select("#circle").append("svg")
       .attr("width", width)
@@ -32,7 +32,57 @@ function create_circle(path)
     //.style("top", (d3.event.pageY - 28) + "px");
     //.offset([-10, 0])
     .html(function(d) {
-      return "<strong>method:</strong><span style='color:blue'>" + d.name + "</span>" + "  <strong>score:</strong>" + "<span>" + d.score + "</span>";
+      var status = 0;
+      var threshold = 5;
+      var icon;
+      //alert(d.percentage_delta);
+      if (parseFloat(d.percentage_delta) < threshold || parseFloat(d.percentage_delta) > -1 * threshold) 
+      {
+          status = 1;
+      }
+      if (parseFloat(d.percentage_delta) > threshold){
+          status = 2;
+          icon = "<i class = 'pe-7s-up-arrow'></i>";
+      }
+      if (parseFloat(d.percentage_delta) < -1 * threshold){ 
+          status = 3;
+          icon = "<i class = 'pe-7s-bottom-arrow'></i>";
+      }
+      if (is_comparison){
+        var method_name_str = "<strong style = 'color:white'>method: </strong><span style='color:red'>" + d.name + "</span>";
+        var avg_delta_str;
+        var percentage_delta_str;
+        if (status == 1)
+        {
+          // in threshold
+          avg_delta_str = "<br/><strong style = 'color:white'>Average Execute Time: </strong><span style = 'color:blue'>" + d.avg_delta + "(ms)</span>";
+          percentage_delta_str = "<br/><strong style = 'color:white'>Percentage: </strong><span style = 'color:blue'>" + d.percentage_delta + "%</span>";
+
+        }else if (status == 2)
+        {
+          // larger
+          avg_delta_str = "<br/><strong style = 'color:white'>Average Execute Time: </strong><span style = 'color:red'>" + icon + d.avg_delta + "(ms)</span>";
+          percentage_delta_str = "<br/><strong style = 'color:white'>Percentage: </strong><span style = 'color:red'>" + icon + d.percentage_delta + "%</span>";
+
+        }else if (status == 3)
+        {
+          // smaller
+          avg_delta_str = "<br/><strong style = 'color:white'>Average Execute Time: </strong><span style = 'color:green'>" + icon + d.avg_delta + "(ms)</span>";
+          percentage_delta_str = "<br/><strong style = 'color:white'>Percentage: </strong><span style = 'color:green'>" + icon + d.percentage_delta + "%</span>";
+        }
+        return method_name_str + avg_delta_str + percentage_delta_str;
+        
+        //+ "<br/><strong style = 'color:white'>Score: </strong><span style = 'color:red'>" + d.score + "</span>"
+        //+ "<br/><strong style = 'color:white'>Invoke Count: </strong><span style = 'color:red'>" + d.count + "</span>";
+      }
+      else
+      {
+        return "<strong>method: </strong><span style='color:red'>" + d.name 
+        + "<br/><strong style = 'color:white'>Average Execute Time: </strong><span>" + d.avg 
+        + "(ms)</span>" + "<br><strong style = 'color:white'>Percentage: <strong><span style = 'color:red'>" + d.percentage + "%</span>"
+        + "<br><strong style = 'color:white'>Score: <strong><span style = 'color:red'>" + d.score + "</span>"
+        + "<br><strong style = 'color:white'>Invoke Count: <strong><span style = 'color:red'>" + d.count + "</span>";
+      }
     });
     svg.call(tip);
    
@@ -55,26 +105,9 @@ function create_circle(path)
         .attr("class", function(d) { return d.parent ? d.children ? "node": "node--leaf" : "node--root"; })
         .style("fill", function(d) { return d.children ? color(d.depth) : null; })
         .on("click", function(d) { if (focus !== d) zoom(d), d3.event.stopPropagation(); })
-       /* .call(d3.tip()
-                //.attr({class: function(d, i) { return d + ' ' +  i + ' A'; }})
-                .style({color: 'blue'})
-                //.text(function(d){ return 'value: '+ d.name; })
-                .html(function(d) {
-                  return "<strong>method:</strong><span style='color:blue'>" + d.name + "</span>" + "  <strong>score:</strong>" + "<span>" + d.score + "</span>";
-                })
-            )
-        */
-        //.on('mouseover', function(d, i){ d3.select(this).style({fill: 'skyblue'}); })
-        //.on('mouseout', function(d, i){ d3.select(this).style({fill: 'aliceblue'}); });
-
-        //.append("title")
-        //.text(function(d) { return d.name; });
         .on("mouseover", tip.show)
         .on('mouseout', tip.hide);
-        //.on("mouseover", function(){return tooltip.style("visibility", "visible");})
-        //.on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
-        //.on("mouseout", function(){return tooltip.style("visibility", "hidden");});
-    
+
     var text = svg.selectAll("svg circle")
         .data(nodes)
       .enter().append("text")

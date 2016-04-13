@@ -38,9 +38,7 @@ def index(request):
     return render_to_response("index.html", locals())
 
 def debug(request):
-    if request.method == "POST" and request.is_ajax():
-        pass
-    return HttpResponse(json.dumps({'status':200}))
+    return render_to_response("zoomcircle.html", locals())
 
 
 @login_required
@@ -257,7 +255,7 @@ def show_history(request):
     username = request.user.username
     repostory = os.path.join(settings.JSON_ROOT, username)
     if os.path.exists(repostory):
-        directory_name_list = [n for n in os.listdir(repostory) if os.path.isdir(os.path.join(repostory, n)) and n != "temp"]
+        directory_name_list = [n for n in os.listdir(repostory) if os.path.isdir(os.path.join(repostory, n)) and n != "temp" and n != "comparison"]
         history_records = []
         for index, directory_name in enumerate(directory_name_list):
             record_file_name = os.path.join(repostory, directory_name) + "/record.json"
@@ -447,8 +445,8 @@ def make_comparison(request):
                 baseline = value
             else:
                 all_record.append({
-                    'file' : key,
-                    'date' : value
+                    'file' : value,
+                    'date' : key
                 })
         if len(all_record) != 2:
             logger.error("comparison record item must be 2")
@@ -523,7 +521,8 @@ def comparison_result(request):
     # get the target record and baseline record
     target_record = record_contents[analysis_position]['content']
     baseline_record = record_contents[baseline_position]['content']
-
+    target_date = record_contents[analysis_position]['date']
+    baseline_date = record_contents[baseline_position]['date']
     '''
         function level process
         compare all function in score, response time aspects
@@ -662,6 +661,59 @@ def edit_profile(request):
         first_name = user.first_name
         last_name = user.last_name
     return render_to_response("user.html", locals())
+@login_required
+def comparison_service_detail(request, service_name, target_date, baseline_date):
+    """ service detail comparison
+    Args:
+        1) service_name : the name of the compared service
+        2) target_date : target analysis record date
+        3) baseline_date : baseline analysis record date
+    Returns:
+
+    Raises:
+    """
+    username = request.user.username
+    target_path = os.path.join(settings.JSON_ROOT, request.user.username) + "/" + target_date + "/" + service_name + ".json"
+    baseline_path = os.path.join(settings.JSON_ROOT, request.user.username) + "/" + baseline_date + "/" + service_name + ".json"
+    # load target serivice and baseline service
+    try:
+        f = open(target_path, 'r')
+        target_service = json.load(f)
+    except Exception, e:
+        logger.error(e)
+        return HttpResponseRedirect('/error/500/')
+    finally:
+        f.close()
+
+    try:
+        f = open(baseline_path, 'r')
+        baseline_service = json.load(f)
+    except Exception, e:
+        logger.error(e)
+        return HttpResponseRedirect('/error/500/')
+    finally:
+        f.close()
+    # start to comparsion
+    compare_method_recursively(target_service, baseline_service)
+    # save comparison result
+    comparison_main_directory = os.path.join(settings.JSON_ROOT, request.user.username) + "/comparison"
+    if not os.path.exists(comparison_main_directory):
+        os.makedirs(comparison_main_directory)
+
+    comparison_directory = comparison_main_directory + "/" + target_date + "_" + baseline_date
+    if not os.path.exists(comparison_directory):
+        os.makedirs(comparison_directory)
+
+    result_path = comparison_main_directory + "/"  + "result.json"
+    try:
+        f = open(result_path, "w+")
+        json.dump(target_service, f, indent = 2)
+    except Exception, e:
+        logger.error(e)
+    finally:
+        f.close()
+    path = "/static/assets/data/" + request.user.username + "/comparison/result.json"
+    return render_to_response("comparison_service_detail.html", locals())
 # not in use now
 def get_password(request):
     return render_to_response("get_password.html", locals())
@@ -776,28 +828,28 @@ def format_service_name(service_name):
     SEPERATE_CHAR = '['
     seperate_position = service_name.find('[')
     return (service_name[:seperate_position], service_name[seperate_position:])
-'''
-    @parameters
-        1) rank_list : record['rank_list']
-        2) method_name : specific method name
-    @return
-        1) score : relevant function score
-'''
 def get_function_score(rank_list, method_name):
+    '''
+        @parameters
+            1) rank_list : record['rank_list']
+            2) method_name : specific method name
+        @return
+            1) score : relevant function score
+    '''
     for function in rank_list:
         if function[0] == method_name:
             return function[1]['score']
     return None
 
-'''
-    @parameters
-        1) rank_list : record['rank_list']
-        2) method_name : specific method name
-    @return
-        1) response time : relevant function response time
-
-'''
 def get_function_avg_response_time(rank_list, method_name):
+    '''
+        @parameters
+            1) rank_list : record['rank_list']
+            2) method_name : specific method name
+        @return
+            1) response time : relevant function response time
+
+    '''
     for function in rank_list:
         if function[0] == method_name:
             return function[1]['avg']
@@ -811,26 +863,26 @@ def get_all_function_info(rank_list, target_function_list):
         all_response_time.append(get_function_avg_response_time(rank_list, function_item[0]))
     return all_scores, all_response_time
 
-'''
-    @parameters
-        1) services : search services list
-        2) service_name : specific service's name
-    @return(if found, otherwise return None)
-        1) return service object
-'''
 def find_service(services, service_name):
+    '''
+        @parameters
+            1) services : search services list
+            2) service_name : specific service's name
+        @return(if found, otherwise return None)
+            1) return service object
+    '''
     for service in services:
         if service['serviceId'] == service_name:
             return service
     return None
-'''
-    @parameters
-        1) service : search service object
-        2) hot_spot_name : specific hot_spot's name
-    @return(if found, otherwise return None)
-        1) return hot_spot object
-'''
 def find_hot_spot(service, hot_spot_name):
+    '''
+        @parameters
+            1) service : search service object
+            2) hot_spot_name : specific hot_spot's name
+        @return(if found, otherwise return None)
+            1) return hot_spot object
+    '''
     for hot_spot in service['hot_spot']:
         if hot_spot['method_name'] == hot_spot_name:
             return hot_spot
@@ -856,14 +908,15 @@ def get_all_service_info(search_services, target_services):
                 if search_hot_spot:
                     hot_spots.append({
                         'method_name' : shorten_function_name_by_method_name(search_hot_spot['method_name']),
-                        'percentage' : round(search_hot_spot['percentage'] * 100, 2)
+                        'percentage' : round(search_hot_spot['percentage'], 2)
                     })
                 else:
                     hot_spots.append(None)
             all_services_hot_spots.append({
                 'service' : format_service_name(service['serviceId']),
                 'response_time' : round(search_service['avg'], 2),
-                'hot_spot' : hot_spots
+                'hot_spot' : hot_spots,
+                'service_full' : service['serviceId']
             })
         else:
             # not found
@@ -935,11 +988,11 @@ def get_lastest_date(date_list):
                 lastest_date = date
     return
 
-'''
-    @para : record_list
-    @return : target_record, compare_record, target_position
-'''
 def get_target_record(record_contents):
+    '''
+        @para : record_list
+        @return : target_record, compare_record, target_position
+    '''
     if datetime_less(record_contents[0]['date'], record_contents[1]['date']):
         position = 1
         position_compare = 0
@@ -953,3 +1006,67 @@ def is_min_element_of_array(position, array):
         if check_elem > elem:
             return False
     return True
+def compare_method_recursively(target_service, baseline_service):
+    """ compare method detail between target service and baseline service
+        1) percentage
+        2) avg selt time
+    Args:
+        1) target_service
+        2) baseline_service
+    Returns:
+
+    Raises:
+
+    Prerequisite:
+        assume the two node in comparison is the same
+    """
+    target_percentage = target_service['percentage']
+    baseline_percentage = baseline_service['percentage']
+    target_avg = target_service['avg']
+    baseline_avg = baseline_service['avg']
+    print "target_percentage ", target_percentage
+    print "baseline_percentage ", baseline_percentage
+    print "target_avg ", target_avg
+    print "baseline_avg ", baseline_avg
+    # percentage
+    try:
+        if target_percentage == baseline_percentage:
+            target_percentage_gr = 0
+        else:
+            target_percentage_gr =  1.0 * (target_percentage - baseline_percentage) / target_percentage
+        # save to target_service
+        delta_percentage = target_percentage - baseline_percentage
+        print "delta_percentage ", delta_percentage
+        target_service['percentage_gr'] = round(target_percentage_gr * 100, 2)
+        target_service['percentage_delta'] = round(delta_percentage, 2)
+    except Exception, e:
+        logger.error(e)
+
+    # avg self time
+
+    try:
+        if target_avg ==  baseline_avg:
+            target_avg_gr = 0
+        else:
+            target_avg_gr = 1.0 * (target_avg - baseline_avg) / target_avg
+        avg_delta = target_avg - baseline_avg
+        print 'avg_delta ', avg_delta
+        target_service['avg_gr'] = round(target_avg_gr * 100, 2)
+        target_service['avg_delta'] = round(avg_delta, 2)
+    except Exception, e:
+        logger.error(e)
+
+    # process children
+
+    if target_service.has_key('children'):
+        for child in target_service['children']:
+            b_find = False
+            for _child in baseline_service['children']:
+                if child['name'] == _child['name']:
+                    compare_method_recursively(child, _child)
+                    b_find = True
+                    break
+            if b_find  is False:
+                pass
+
+

@@ -259,3 +259,64 @@
   height    : 300px;
   font-size : 11px;
 }
+#response_time_chart
+{
+  width: 83%;
+  height: 300px;
+}
+#smoothedLinerChart_1
+{
+  width: 83%;
+  height: 300px;
+
+}
+#services-selector
+{
+  margin-top: 40px;
+  margin-right: 20px;
+  float: right;
+}
+#tree_diagram
+{
+  display: none;
+}
+
+.node rect {
+  cursor: pointer;
+  fill: #fff;
+  fill-opacity: .5;
+  stroke: #999da1;
+  stroke-width: 1.5px;
+}
+
+.node text {
+  font: 10px sans-serif;
+  pointer-events: none;
+  color: yellow;
+}
+
+path.link {
+  fill: none;
+  stroke: #9ecae1;
+  stroke-width: 1.5px;
+}
+
+.modal-content {
+  position: relative;
+  background-color: #f2f2f2;
+  background-clip: padding-box;
+  border: 1px solid #999;
+  border: 1px solid rgba(0, 0, 0, .2);
+  border-radius: 5px;
+}
+.modal-header {
+  background: #68dff0;
+}
+
+.modal-title {
+  color: white;
+}
+.modal-footer {
+        margin-bottom: 0px !important;
+}
+

@@ -37,6 +37,7 @@ urlpatterns = [
     url(r'^dashboard/$', views.dashboard),
     url(r'^make_comparison/$', views.make_comparison),
     url(r'^comparison_result/$', views.comparison_result),
+    url(r'^comparison_service_detail/(?P<service_name>.*)/(?P<target_date>.*)/(?P<baseline_date>.*)/$', views.comparison_service_detail),
     url(r'^history/$', views.show_history),
     url(r'^profile/$', views.edit_profile),
     url(r'^get_password/$', views.get_password),

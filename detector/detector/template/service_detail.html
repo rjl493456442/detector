@@ -31,12 +31,8 @@
     <link rel="stylesheet" type="text/css" href="/static/assets_V3/css/max.css">
     <link href='http://fonts.googleapis.com/css?family=Roboto:400,700,300' rel='stylesheet' type='text/css'>
     <link href="/static/assets_V3/css/pe-icon-7-stroke.css" rel="stylesheet" />
-
-    <script type="text/javascript" src = "/static/assets/js/circle.js"></script>
-    <script src="/static/assets/js/d3.min.js"></script>
-    <script src="/static/assets/js/tip.js"></script>
     <link href="/static/assets/css/zoom_circle.css" rel="stylesheet">
-
+    <link rel="stylesheet" type="text/css" href="/static/assets_V3/css/flat-ui.css">
 </head>
 <body>
 
@@ -180,7 +176,7 @@
                                         {%for itm in service.hot_spot%}
                                         <tr>
                                             <td>{{itm.method_name}}</td>
-                                            <td>{{itm.percentage}}</td>
+                                            <td>{{itm.percentage}}%</td>
                                         </tr>
                                         {%endfor%}
                                     </tbody>
@@ -222,10 +218,19 @@
                 <div class = "row">
                     <div class="col-md-12">
                         <div class="card">
+                            <div id="services-selector">
+                                <select data-toggle="select" class="form-control select select-primary mrs " onchange = "getSelected(this)">
+                                    <option value="0" selected>ZoomCircle</option>
+                                    <option value="1">Tree</option>
+                                </select>
+                            </div>
                             <div class="header">
-                                <h4 class="title">Zoom Pack</h4>
+                                <h4 class="title">Services Diagram</h4>
                             </div>
                             <div id = 'circle'></div>
+                            <!-- hidden div -->
+                            <div id = "tree_diagram"></div>
+                            
                         </div>
                     </div>
                 </div>
@@ -251,6 +256,7 @@
 
     <script type="text/javascript" src="/static/assets_table/js/bootstrap.js"></script>
     <script type="text/javascript" src="/static/assets_table/js/bootstrap-table.js"></script>
+    <script type="text/javascript" src="/static/assets_V3/js/flat-ui.js"></script>
 
     <!-- export plugin js>
     <script type="text/javascript" src="/static/table_export_plugin/libs/FileSaver/FileSaver.min.js"></script>
@@ -265,6 +271,31 @@
     <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
     <script src="https://www.amcharts.com/lib/3/themes/patterns.js"></script>
     <script src="https://www.amcharts.com/lib/3/plugins/export/export.js"></script>
+    <script type="text/javascript" src = "/static/assets/js/circle.js"></script>
+    <script type="text/javascript" src = "/static/assets/js/tree.js"></script>
+    <script src="/static/assets/js/d3.min.js"></script>
+    <script src="/static/assets/js/tip.js"></script>
+    <script type="text/javascript" src="/static/assets_V3/js/application.js"></script>
+    <script type="text/javascript">
+        function getSelected(sel)
+        {
+            var value = sel.value;
+            var zoom_div = $("#circle");
+            var tree_div = $("#tree_diagram");
+            if (value == 1)
+            {
+                // hidden circle and show tree
+                zoom_div.hide();
+                tree_div.show();
+            }
+            else if(value == 0)
+            {
+                zoom_div.show();
+                tree_div.hide();
+            }
+        }
+    </script>
+
     <script>
             var chart;
             var graph;
@@ -436,16 +467,10 @@
                 chart_response_time.write("response_time_chart");
             });
     </script>
-    <script type="text/javascript">
-        $(document).ready(function() {
-        $(".clickable-row").click(function() {
-            window.document.location = $(this).data("href");
-        });
-      });
-    </script>
     <script>
-        $(document).ready(function() {
-            create_circle("{{path}}");
+        $(document).ready(function() {   
+            create_tree("{{path}}", false);
+            create_circle("{{path}}", false);
         });
     </script>
 </html>

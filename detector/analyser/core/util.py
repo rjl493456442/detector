@@ -57,6 +57,20 @@ class Node:
         self.isValid = True
         return self.hashcode
     def merge(self, node):
+        """
+            merge two node into one and discard the other
+            1) merge execute_time to one node
+            2) calcu min_time and max_time
+            3) merge execution count
+        Args:
+            1) node: the other node
+        Returns:
+
+        Raises:
+
+        Prerequisite:
+            the structure of two tree must to be same
+        """
         self.cnt = self.cnt + node.cnt
         self.executeTime = self.executeTime + node.executeTime
         if int(self.maxTime) < int(node.maxTime):
@@ -66,6 +80,10 @@ class Node:
         for index, child in enumerate(self.children):
             child.merge(node.children[index])
     def mergeDifferent(self, node):
+        """ merge two node
+        Prerequisite:
+            the structure of the two tree is different, while the two node in this function is same
+        """
         self.cnt = self.cnt + node.cnt
         children = self.children
         isFind = False
@@ -94,7 +112,6 @@ class Node:
         for child in self.children:
             child_total = child_total + child.executeTime
         self.percentageRoot = 1.0 * (self.executeTime  - child_total ) / total
-        self.percentageChildren = 1.0 * child_total / self.executeTime
         self.avgTime = 1.0 * (self.executeTime - child_total) / self.cnt
         try:
             self.percentageFather = 1.0 * self.executeTime / (self.father.executeTime)
@@ -141,6 +158,7 @@ class Node:
             jsonVal['avg'] = round(self.avgTime, 2)
             jsonVal['percentage'] = round(self.percentageRoot * 100, 2)
             jsonVal['percentageChildren'] = round(self.percentageChildren * 100, 2)
+            jsonVal['count'] = self.cnt
             if len(self.children) > 0:
                 jsonVal['children'] = []
         nodes = []
@@ -164,7 +182,7 @@ class Node:
         else:
             return True
 class Tree(object):
-    def __init__(self, serviceId, totalTime, occurtime):
+    def __init__(self, serviceId, totalTime, occurtime, thread_name):
         self.serviceId = serviceId
         self.executeTime = totalTime
         self.root = Node({'name':'root','execute_time': totalTime, 'position':'-1'})
@@ -173,6 +191,10 @@ class Tree(object):
         self.response_time = [{
             'occur_time': occurtime.strftime("%H:%M:%S"),
             'response_time': totalTime
+        }]
+        self.thread_info = [{
+            'thread_name' : thread_name,
+            'total_time' : totalTime
         }]
     def insert(self, node):
         self.findFather(node)
@@ -195,6 +217,17 @@ class Tree(object):
         # for totally same tree
         self.response_time.extend(tree.response_time)
         self.occurtime.extend(tree.occurtime)
+        # merge thread info
+        thread_name_of_self = [elem['thread_name'] for elem in self.thread_info]
+        for elem in tree.thread_info:
+            thread_name = elem['thread_name']
+            is_exists = False
+            for index, _ in enumerate(thread_name_of_self):
+                if _ == thread_name:
+                    is_exists = True
+                    self.thread_info[index]['total_time'] += elem['total_time']
+            if is_exists is False:
+                self.thread_info.append(elem)
         if self.root.hashcode == tree.root.hashcode:
             self.root.merge(tree.root)
             return True
@@ -203,17 +236,30 @@ class Tree(object):
     def mergeDifferent(self, tree):
         self.occurtime.extend(tree.occurtime)
         self.response_time.extend(tree.response_time)
+        # merge thread info
+        thread_name_of_self = [elem['thread_name'] for elem in self.thread_info]
+        for elem in tree.thread_info:
+            thread_name = elem['thread_name']
+            is_exists = False
+            for index, _ in enumerate(thread_name_of_self):
+                if _ == thread_name:
+                    is_exists = True
+                    self.thread_info[index]['total_time'] += elem['total_time']
+            if is_exists is False:
+                self.thread_info.append(elem)
         self.root.mergeDifferent(tree.root)
     def calcuTreePercentage(self):
         self.root.calcuPercentage(self.root.executeTime)
     def calcuTreeAvg(self):
         self.root.calcuAvg(self.root.executeTime)
     def check_validation(self):
+
         nodes = self.traverse()
         for n in nodes:
             if n.check_validation() is False:
-                #logger.info("initialize data ERROR: " + n.methodName)
-                pass
+                logger.info("initialize data ERROR: " + n.methodName)
+                return False
+        return True
     def checkIsValid(self):
         sum = 0
         nodes = self.traverse()
@@ -268,7 +314,7 @@ class Tree(object):
                             find_in_ret_list = True
                     # not found in ret list
                     if find_in_ret_list is False:
-                        ret.append({'method_name' : spot.methodName, 'percentage': spot.percentageRoot})
+                        ret.append({'method_name' : spot.methodName, 'percentage': round(spot.percentageRoot * 100, 2)})
             self.hot_spot = ret
         except Exception, e:
             logger.error(e)

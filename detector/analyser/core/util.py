@@ -5,6 +5,7 @@ from config import CoreConfigure, logging
 import os
 from django.conf import settings
 import datetime
+import time
 
 logging.basicConfig(level = logging.DEBUG,
                     format = '%(asctime)s %(name)s %(levelname)s %(message)s',
@@ -15,6 +16,7 @@ class Node:
     def __init__(self, info):
         self.methodName = info['name']
         self.executeTime = info['execute_time']
+        self.self_time = 0
         self.position = info['position']
         self.p_Father = 0
         self.p_Root = 0
@@ -29,6 +31,7 @@ class Node:
         self.percentageChildren = 0
         self.cnt = 1
         self.score = None
+        self.isleaf = False
     @property
     def percentageFather(self):
         return self.p_Father
@@ -56,6 +59,21 @@ class Node:
         self.hashcode = digester.hexdigest()
         self.isValid = True
         return self.hashcode
+    def calcu_statistic(self):
+        child_total = 0
+        for child in self.children:
+            child_total += child.executeTime
+        self.self_time = self.executeTime - child_total
+        self.maxTime = self.minTime = self.self_time
+        for child in self.children:
+            child.calcu_statistic()
+    def judge_is_leaf(self):
+        if len(self.children) != 0:
+            self.isleaf = False
+            for child in self.children:
+                child.judge_is_leaf()
+        else:
+            self.isleaf = True
     def merge(self, node):
         """
             merge two node into one and discard the other
@@ -73,6 +91,7 @@ class Node:
         """
         self.cnt = self.cnt + node.cnt
         self.executeTime = self.executeTime + node.executeTime
+        self.self_time = self.self_time + node.self_time
         if int(self.maxTime) < int(node.maxTime):
             self.maxTime = node.maxTime
         if self.minTime > node.minTime:
@@ -87,7 +106,9 @@ class Node:
         self.cnt = self.cnt + node.cnt
         children = self.children
         isFind = False
+        target = False
         self.executeTime = self.executeTime + node.executeTime
+        self.self_time = self.self_time + node.self_time
         if self.maxTime < node.maxTime:
             self.maxTime = node.maxTime
         if self.minTime > node.minTime:
@@ -95,10 +116,6 @@ class Node:
         for child in node.children:
             for _child in self.children:
                 if _child.methodName == child.methodName:
-                    if _child.maxTime < child.maxTime:
-                        _child.maxTime = child.maxTime
-                    if _child.minTime > child.minTime:
-                        _child.minTime = child.minTime
                     _child.mergeDifferent(child)
                     isFind = True
                     break
@@ -111,8 +128,8 @@ class Node:
         child_total = 0
         for child in self.children:
             child_total = child_total + child.executeTime
-        self.percentageRoot = 1.0 * (self.executeTime  - child_total ) / total
-        self.avgTime = 1.0 * (self.executeTime - child_total) / self.cnt
+        self.percentageRoot = 1.0 * self.self_time / total
+        self.avgTime = 1.0 * self.self_time / self.cnt
         try:
             self.percentageFather = 1.0 * self.executeTime / (self.father.executeTime)
         except:
@@ -123,6 +140,8 @@ class Node:
         """ calcu percentage
         Args:
             1) total: service total execution time. and that is root node execution time
+
+        Depreciate
         """
         self.percentageRoot = 1.0 * self.executeTime  / total
         child_exection_total = 0
@@ -159,6 +178,7 @@ class Node:
             jsonVal['percentage'] = round(self.percentageRoot * 100, 2)
             jsonVal['percentageChildren'] = round(self.percentageChildren * 100, 2)
             jsonVal['count'] = self.cnt
+            jsonVal['isleaf'] = self.isleaf
             if len(self.children) > 0:
                 jsonVal['children'] = []
         nodes = []
@@ -196,6 +216,10 @@ class Tree(object):
             'thread_name' : thread_name,
             'total_time' : totalTime
         }]
+        self.max_time = totalTime
+        self.min_time = totalTime
+    def judge_is_leaf(self):
+        self.root.judge_is_leaf()
     def insert(self, node):
         self.findFather(node)
     def findFather(self, node):
@@ -217,6 +241,11 @@ class Tree(object):
         # for totally same tree
         self.response_time.extend(tree.response_time)
         self.occurtime.extend(tree.occurtime)
+        # statistic tree execute_time
+        if self.max_time < tree.max_time:
+            self.max_time = tree.max_time
+        if self.min_time > tree.min_time:
+            self.min_time = tree.min_time
         # merge thread info
         thread_name_of_self = [elem['thread_name'] for elem in self.thread_info]
         for elem in tree.thread_info:
@@ -234,6 +263,12 @@ class Tree(object):
         else:
             return False
     def mergeDifferent(self, tree):
+        # statistic tree execute_time
+        if self.max_time < tree.max_time:
+            self.max_time = tree.max_time
+        if self.min_time > tree.min_time:
+            self.min_time = tree.min_time
+        # merge thread info
         self.occurtime.extend(tree.occurtime)
         self.response_time.extend(tree.response_time)
         # merge thread info
@@ -252,6 +287,10 @@ class Tree(object):
         self.root.calcuPercentage(self.root.executeTime)
     def calcuTreeAvg(self):
         self.root.calcuAvg(self.root.executeTime)
+    def calcu_statistic(self):
+        """ calcu max min time for the first construction
+        """
+        self.root.calcu_statistic()
     def check_validation(self):
 
         nodes = self.traverse()
@@ -300,21 +339,18 @@ class Tree(object):
         find_in_ret_list = False
         ret = []
         try:
-            if self.hot_spot is not None:
-                return self.hot_spot
             nodes = self.root.traverse()
             hot_spot = sorted(nodes, lambda x,y : cmp(x.percentageRoot, y.percentageRoot), reverse = True)
             for spot in hot_spot:
                 # reset flag
                 find_in_ret_list = False
-                if spot.percentageRoot > 0.1 :
-                    for _spot in ret:
-                        if _spot['method_name'] == spot.methodName:
-                            _spot['percentage'] += spot.percentageRoot
-                            find_in_ret_list = True
+                for _spot in ret:
+                    if _spot['method_name'] == spot.methodName:
+                        _spot['percentage'] += round(spot.percentageRoot * 100, 2)
+                        find_in_ret_list = True
                     # not found in ret list
-                    if find_in_ret_list is False:
-                        ret.append({'method_name' : spot.methodName, 'percentage': round(spot.percentageRoot * 100, 2)})
+                if find_in_ret_list is False and spot.percentageRoot > 0.1:
+                    ret.append({'method_name' : spot.methodName, 'percentage': round(spot.percentageRoot * 100, 2)})
             self.hot_spot = ret
         except Exception, e:
             logger.error(e)
@@ -369,21 +405,22 @@ class InvertedIndex:
                 else:
                     services[service] = [methodNode.percentageRoot, [methodNode.percentageChildren]]
                 if self.__table[methodNode.methodName]['max'] < methodNode.maxTime :
-                    self.__table[methodNode.methodName]['max'] = float("%0.2f" % methodNode.maxTime)
+                    self.__table[methodNode.methodName]['max'] = round(methodNode.maxTime, 2)
                 if self.__table[methodNode.methodName]['min'] > methodNode.minTime:
-                    self.__table[methodNode.methodName]['min'] = float("%0.2f" % methodNode.minTime)
-                avg = ( self.__table[methodNode.methodName]['avg'] * self.__table[methodNode.methodName]['cnt'] + methodNode.executeTime) * 1.0  / (self.__table[methodNode.methodName]['cnt'] + methodNode.cnt)
-                self.__table[methodNode.methodName]['avg'] = float("%0.2f" % avg)
+                    self.__table[methodNode.methodName]['min'] = round(methodNode.minTime, 2)
+                avg = ( self.__table[methodNode.methodName]['avg'] * self.__table[methodNode.methodName]['cnt'] + methodNode.self_time) * 1.0  / (self.__table[methodNode.methodName]['cnt'] + methodNode.cnt)
+                self.__table[methodNode.methodName]['avg'] = round(avg, 2)
                 self.__table[methodNode.methodName]['cnt'] = self.__table[methodNode.methodName]['cnt'] + methodNode.cnt
             else:
                 service_info = [methodNode.percentageRoot, [methodNode.percentageChildren]]
                 services = {service : service_info}
                 self.__table[methodNode.methodName] = {}
                 self.__table[methodNode.methodName]['services'] = services
-                self.__table[methodNode.methodName]['max'] =  float("%0.2f" % methodNode.maxTime)
-                self.__table[methodNode.methodName]['min'] =  float("%0.2f" % methodNode.minTime)
-                self.__table[methodNode.methodName]['avg'] =  float("%0.2f" % methodNode.avgTime)
+                self.__table[methodNode.methodName]['max'] =  round(methodNode.maxTime, 2)
+                self.__table[methodNode.methodName]['min'] =  round(methodNode.minTime, 2)
+                self.__table[methodNode.methodName]['avg'] =  round(methodNode.avgTime, 2)
                 self.__table[methodNode.methodName]['cnt'] =  methodNode.cnt
+                self.__table[methodNode.methodName]['isleaf'] = methodNode.isleaf
         except Exception,e:
             logger.error(e)
 

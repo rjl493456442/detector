@@ -194,7 +194,7 @@ def execute(request):
 
                 services = []
                 for tree in services_tree:
-                    services.append({'serviceId': tree.serviceId, 'max': tree.root.maxTime , 'min': tree.root.minTime, 'avg':tree.root.executeTime / tree.root.cnt, 'cnt': tree.root.cnt, 'hot_spot': tree.get_hotspot()})
+                    services.append({'serviceId': tree.serviceId, 'max': tree.max_time , 'min': tree.min_time, 'avg':tree.root.executeTime / tree.root.cnt, 'cnt': tree.root.cnt, 'hot_spot': tree.get_hotspot()})
 
                 ## save to session
                 services = sorted(services, lambda x,y : cmp(x['avg'], y['avg']), reverse = True)
@@ -292,12 +292,19 @@ def service_detail(request, id, date = None):
         # file_name: path to zoom pack diagram data, used when html render
         file_name = request.user.username + "/" + path_part + "/" + id + '.json'
         path = "/static/assets/data/" + file_name
-        record = restore_record(request.user.username)
+        record = restore_record(request.user.username, date)
         services = record['services']
+        service = None
         for i in services:
             if i['serviceId'] == id:
                 service = i
                 break
+        if service:
+            avg_time = round(service['avg'], 2)
+            min_time = round(service['min'], 2)
+            max_time = round(service['max'], 2)
+            count = service['cnt']
+            serviceId = service['serviceId']
         # get throughput from json file
         throughput_file = os.path.join(settings.JSON_ROOT, request.user.username) + "/" + path_part + "/" + id + "_date.json"
         try:
@@ -352,9 +359,18 @@ def function_detail(request, id, date = None):
             info['method_max'] = function_data[1]['max']
             info['method_min'] = function_data[1]['min']
             info['method_score'] = function_data[1]['score']
+            if function_data[1]['score'] > 0.3:
+                status = "Dangerous"
+            elif function_data[1]['score'] > 0.1:
+                status = "Normal"
+            else:
+                status = "Great"
+
             related_services = function_data[1]['services']
             related_services_list = []
             count_id = 1
+            more_70_percentage_count = 0
+            isleaf = function_data[1]['isleaf']
             for service_name, percentage in related_services.items():
                 related_services_list.append({
                     'name' : service_name,
@@ -364,6 +380,8 @@ def function_detail(request, id, date = None):
                     'child_percentage' : round(percentage[1][0] * 100, 2),
                     'id' : count_id
                 })
+                if percentage[0] > 0.7:
+                    more_70_percentage_count += 1
                 count_id += 1
             # sort related_services_list depand on percentage relative to root
             related_services_list.sort(key = lambda x: x['percentage'], reverse = True)
@@ -783,8 +801,11 @@ def save_record(file_list, services, rank_list, total_size, elapsed, username, d
     # save to temp file
     record.save_record(username)
 
-def restore_record(username):
-    path = os.path.join(settings.JSON_ROOT, username) + "/temp/record.json"
+def restore_record(username, date = None):
+    path_part = "temp"
+    if date:
+        path_part = date
+    path = os.path.join(settings.JSON_ROOT, username) + "/" + path_part +"/record.json"
     with open(path, 'r') as f:
         record = json.load(f)
         return record

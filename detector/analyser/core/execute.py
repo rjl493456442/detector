@@ -93,6 +93,7 @@ class logProfiler(object):
                 # discard the invalid tree
                 if tree.check_validation() is False:
                     continue
+                tree.calcu_statistic()
                 # tree hash
                 tree.root.getHash()
                 if item['serviceId'] in self.services.keys():
@@ -183,6 +184,8 @@ class logProfiler(object):
             tree.save_occur_time(self.username, self.datetime_str)
             # temp directory
             tree.save_occur_time(self.username, "temp")
+            # judge for each node whether it's a leaf node
+            tree.judge_is_leaf()
             self.final.append(tree)
         logger.info("Service total: " + str(len(self.final)))
     def export_request_flow(self):

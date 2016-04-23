@@ -175,7 +175,7 @@
                             <div class="content">
                                 <!-- Analysis Statistic Data -->
                                 <div class="row">
-                                    <div class="col-md-8">
+                                    <div class="col-md-6">
                                         <h5>Data Statistics</h5>
                                         <div class="alert alert-info alert-with-icon">
                                             <span data-notify="icon" class="pe-7s-loop"></span>
@@ -195,15 +195,28 @@
                                         </div>
 
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <h5>Analysis Conclusion</h5>
                                         <div class="alert alert-info alert-with-icon">
                                             <span data-notify="icon" class="pe-7s-loop"></span>
-                                            <span data-notify="message">Analysis Score: {{info.method_score}}</span>
+                                            {%if isleaf%}
+                                            <span data-notify="message">Leaf Node</span>
+                                            {%else%}
+                                            <span data-notify="message">Internal Node</span>
+                                            {%endif%}
+                                            
                                         </div>
                                         <div class="alert alert-success alert-with-icon">
                                             <span data-notify="icon" class="pe-7s-timer"></span>
-                                            <span data-notify="message">Longest Execution Time: {{info.method_max}}(ms)</span>
+                                            <span data-notify="message">More than 70% Services: {{more_70_percentage_count}}</span>
+                                        </div>
+                                        <div class="alert alert-warning alert-with-icon">
+                                            <span data-notify="icon" class="pe-7s-clock"></span>
+                                            <span data-notify="message">Analysis Score: {{info.method_score}}</span>
+                                        </div>
+                                        <div class="alert alert-danger alert-with-icon">
+                                            <span data-notify="icon" class="pe-7s-wristwatch"></span>
+                                            <span data-notify="message">Status: {{status}}</span>
                                         </div>
                                     </div>
                                 </div>
